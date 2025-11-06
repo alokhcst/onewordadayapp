@@ -1,0 +1,15 @@
+# Copy this file to terraform.tfvars and update with your values
+
+aws_region = "us-east-1"
+environment = "dev"
+project_name = "onewordaday"
+
+# Google OAuth Configuration (Optional - leave empty to skip)
+# Get these from Google Cloud Console: https://console.cloud.google.com/
+google_client_id = "YOUR_GOOGLE_CLIENT_ID"
+google_client_secret = "YOUR_GOOGLE_CLIENT_SECRET"
+
+# SES Email Configuration
+# This email will be used to send notifications. You'll receive a verification email from AWS.
+ses_sender_email = "your-email@example.com"
+
