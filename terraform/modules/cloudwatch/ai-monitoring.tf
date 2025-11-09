@@ -10,10 +10,6 @@ resource "aws_cloudwatch_metric_alarm" "ai_rate_limit_approaching" {
   threshold           = 18 # Alert at 18 out of 20 daily limit
   alarm_description   = "Alert when AI word generation approaches daily limit (18/20)"
   alarm_actions       = []
-
-  dimensions = {
-    Environment = var.environment
-  }
 }
 
 # CloudWatch Alarm for AI Generation Errors
@@ -46,14 +42,21 @@ resource "aws_cloudwatch_metric_alarm" "llm_provider_failures" {
   threshold           = 3
   alarm_description   = "Alert when multiple LLM providers are failing"
   treat_missing_data  = "notBreaching"
+}
 
-  dimensions = {
+# Create log group for AI word generation Lambda
+resource "aws_cloudwatch_log_group" "ai_word_generation" {
+  name              = "/aws/lambda/${var.name_prefix}-ai-word-generation"
+  retention_in_days = 7
+
+  tags = {
     Environment = var.environment
   }
 }
 
 # Custom metric - Log daily AI usage
 resource "aws_cloudwatch_log_metric_filter" "ai_words_generated" {
+  depends_on = [aws_cloudwatch_log_group.ai_word_generation]
   name           = "${var.name_prefix}-ai-words-generated"
   log_group_name = "/aws/lambda/${var.name_prefix}-ai-word-generation"
   pattern        = "[time, request_id, level=INFO, msg=\"Word generated successfully\", ...]"
@@ -62,14 +65,12 @@ resource "aws_cloudwatch_log_metric_filter" "ai_words_generated" {
     name      = "AIWordsGenerated"
     namespace = "OneWordADay"
     value     = "1"
-    dimensions = {
-      Environment = var.environment
-    }
   }
 }
 
 # Custom metric - Track LLM provider failures
 resource "aws_cloudwatch_log_metric_filter" "llm_failures" {
+  depends_on     = [aws_cloudwatch_log_group.ai_word_generation]
   name           = "${var.name_prefix}-llm-provider-failures"
   log_group_name = "/aws/lambda/${var.name_prefix}-ai-word-generation"
   pattern        = "[time, request_id, level=ERROR, msg=\"Error with*\", ...]"
@@ -78,9 +79,6 @@ resource "aws_cloudwatch_log_metric_filter" "llm_failures" {
     name      = "LLMProviderFailures"
     namespace = "OneWordADay"
     value     = "1"
-    dimensions = {
-      Environment = var.environment
-    }
   }
 }
 

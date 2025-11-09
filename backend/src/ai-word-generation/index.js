@@ -1,8 +1,8 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
-const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
-const axios = require('axios');
-const { v4: uuidv4 } = require('uuid');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import axios from 'axios';
+import { randomUUID } from 'crypto';
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -21,30 +21,16 @@ const LLM_PROVIDERS = {
   GROQ: {
     name: 'Groq',
     apiUrl: 'https://api.groq.com/openai/v1/chat/completions',
-    models: ['llama-3.1-70b-versatile', 'mixtral-8x7b-32768'],
+    models: ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'],
     rateLimit: { requests: 30, window: 60000 }, // 30 req/min
     priority: 1
-  },
-  OPENROUTER: {
-    name: 'OpenRouter',
-    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
-    models: ['meta-llama/llama-3.1-8b-instruct:free'],
-    rateLimit: { requests: 20, window: 60000 },
-    priority: 2
-  },
-  TOGETHER: {
-    name: 'Together AI',
-    apiUrl: 'https://api.together.xyz/v1/chat/completions',
-    models: ['meta-llama/Llama-3-8b-chat-hf'],
-    rateLimit: { requests: 10, window: 60000 },
-    priority: 3
   }
 };
 
 /**
  * Main Lambda handler for AI-based word generation
  */
-exports.handler = async (event) => {
+export const handler = async (event) => {
   console.log('AI Word Generation triggered', { event });
 
   try {
@@ -184,6 +170,7 @@ async function getUserProfile(userId) {
 
 /**
  * Generate word using AI with LLM router
+ * Now includes image fetching
  */
 async function generateAIWord(user, customPrompt = null) {
   const prompt = buildPrompt(user, customPrompt);
@@ -208,11 +195,21 @@ async function generateAIWord(user, customPrompt = null) {
         wordData.provider = config.name;
         wordData.userId = user.userId;
         wordData.date = new Date().toISOString().split('T')[0];
-        wordData.wordId = uuidv4();
+        wordData.wordId = randomUUID();
         wordData.userContext = user.context;
         wordData.ageGroup = user.ageGroup;
         wordData.examPrep = user.examPrep;
         wordData.createdAt = new Date().toISOString();
+        
+        // Fetch image for the word
+        try {
+          console.log(`Fetching image for word: ${wordData.word}`);
+          const imageUrl = await fetchWordImage(wordData.word, wordData.definition, apiKeys.unsplash);
+          wordData.imageUrl = imageUrl || '';
+        } catch (imageError) {
+          console.error('Error fetching image:', imageError);
+          wordData.imageUrl = '';
+        }
         
         return wordData;
       }
@@ -291,12 +288,6 @@ async function callLLM(config, apiKey, prompt) {
       'Authorization': `Bearer ${apiKey}`
     };
 
-    // Add provider-specific headers
-    if (config.name === 'OpenRouter') {
-      headers['HTTP-Referer'] = 'https://onewordaday.app';
-      headers['X-Title'] = 'One Word A Day';
-    }
-
     const response = await axios.post(config.apiUrl, requestData, {
       headers,
       timeout: 30000
@@ -338,9 +329,51 @@ async function getApiKeys() {
     // Fallback to environment variables for development
     return {
       groq: process.env.GROQ_API_KEY,
-      openrouter: process.env.OPENROUTER_API_KEY,
-      together: process.env.TOGETHER_API_KEY
+      unsplash: process.env.UNSPLASH_API_KEY
     };
+  }
+}
+
+/**
+ * Fetch relevant image for the word using Unsplash API
+ */
+async function fetchWordImage(word, definition, apiKey) {
+  if (!apiKey) {
+    console.log('No Unsplash API key available, skipping image fetch');
+    return '';
+  }
+  
+  try {
+    // Search for images related to the word using Unsplash API
+    const searchQuery = encodeURIComponent(word);
+    const url = `https://api.unsplash.com/search/photos?query=${searchQuery}&per_page=1&orientation=landscape`;
+    
+    // Use proper Authorization header (public authentication)
+    // Reference: https://unsplash.com/documentation#public-authentication
+    const response = await axios.get(url, {
+      headers: {
+        'Authorization': `Client-ID ${apiKey}`,
+        'Accept-Version': 'v1'
+      },
+      timeout: 10000
+    });
+    
+    if (response.data?.results?.length > 0) {
+      const image = response.data.results[0];
+      console.log(`Found image for word "${word}": ${image.id}`);
+      // Return the regular size URL
+      return image.urls.regular;
+    }
+    
+    console.log(`No image found for word: ${word}`);
+    return '';
+  } catch (error) {
+    console.error('Error fetching word image:', error.message);
+    if (error.response) {
+      console.error('Unsplash API error status:', error.response.status);
+      console.error('Unsplash API error data:', error.response.data);
+    }
+    return '';
   }
 }
 
@@ -396,6 +429,5 @@ function createResponse(statusCode, body) {
 /**
  * Export for testing
  */
-module.exports.generateAIWord = generateAIWord;
-module.exports.checkRateLimit = checkRateLimit;
+export { checkRateLimit, generateAIWord };
 

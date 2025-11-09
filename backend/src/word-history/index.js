@@ -1,5 +1,5 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, QueryCommand } = require('@aws-sdk/lib-dynamodb');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -10,7 +10,7 @@ const DAILY_WORDS_TABLE = process.env.DAILY_WORDS_TABLE;
  * Lambda handler for getting word history
  * API: GET /word/history
  */
-exports.handler = async (event) => {
+export const handler = async (event) => {
   console.log('Word history handler triggered', { event });
 
   try {

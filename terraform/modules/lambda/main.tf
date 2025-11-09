@@ -55,7 +55,9 @@ resource "aws_iam_role_policy" "lambda" {
           "arn:aws:dynamodb:*:*:table/${var.feedback_table_name}",
           "arn:aws:dynamodb:*:*:table/${var.feedback_table_name}/index/*",
           "arn:aws:dynamodb:*:*:table/${var.notification_logs_table_name}",
-          "arn:aws:dynamodb:*:*:table/${var.notification_logs_table_name}/index/*"
+          "arn:aws:dynamodb:*:*:table/${var.notification_logs_table_name}/index/*",
+          "arn:aws:dynamodb:*:*:table/onewordaday-*",
+          "arn:aws:dynamodb:*:*:table/onewordaday-*/index/*"
         ]
       },
       {
@@ -159,7 +161,7 @@ resource "aws_lambda_function" "word_generation" {
       AI_WORD_GEN_FUNCTION   = "${var.name_prefix}-ai-word-generation"
       USE_AI_GENERATION      = var.use_ai_generation
       ENVIRONMENT            = var.environment
-      AWS_REGION             = var.aws_region
+      # AWS_REGION is automatically provided by Lambda runtime
     }
   }
 
@@ -192,7 +194,7 @@ resource "aws_lambda_function" "ai_word_generation" {
       AI_USAGE_TABLE    = var.ai_usage_table_name
       SECRET_NAME       = var.llm_api_keys_secret_name
       ENVIRONMENT       = var.environment
-      AWS_REGION        = var.aws_region
+      # AWS_REGION is automatically provided by Lambda runtime
     }
   }
 
@@ -342,10 +344,13 @@ resource "aws_lambda_function" "get_todays_word" {
 
   environment {
     variables = {
-      USERS_TABLE       = var.users_table_name
-      DAILY_WORDS_TABLE = var.daily_words_table_name
-      WORD_BANK_TABLE   = var.word_bank_table_name
-      ENVIRONMENT       = var.environment
+      USERS_TABLE        = var.users_table_name
+      DAILY_WORDS_TABLE  = var.daily_words_table_name
+      WORD_BANK_TABLE    = var.word_bank_table_name
+      ENVIRONMENT        = var.environment
+      SECRET_NAME        = "onewordaday/llm-api-keys"
+      USE_AI_GENERATION  = "true"
+      # AWS_REGION is automatically provided by Lambda runtime
     }
   }
 

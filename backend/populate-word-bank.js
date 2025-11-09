@@ -10,9 +10,9 @@
  * - Level 5: Expert/Academic vocabulary (100 words)
  */
 
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, PutCommand, BatchWriteCommand } = require('@aws-sdk/lib-dynamodb');
-const { v4: uuidv4 } = require('uuid');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { v4 as uuidv4 } from 'uuid';
 
 const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -399,8 +399,8 @@ async function populateWordBank() {
   console.log('========================================\n');
 }
 
-// Run if called directly
-if (require.main === module) {
+// Run if called directly (ESM way)
+if (import.meta.url === `file://${process.argv[1]}`) {
   populateWordBank()
     .then(() => process.exit(0))
     .catch((error) => {
@@ -409,4 +409,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { populateWordBank };
+export { populateWordBank };

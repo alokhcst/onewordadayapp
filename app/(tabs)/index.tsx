@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Speech from 'expo-speech';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function TodayScreen() {
   const router = useRouter();
@@ -135,6 +135,14 @@ export default function TodayScreen() {
         </View>
 
         <Text style={styles.pronunciation}>{word.pronunciation}</Text>
+
+        {word.imageUrl && (
+          <Image
+            source={{ uri: word.imageUrl }}
+            style={styles.wordImage}
+            resizeMode="cover"
+          />
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Definition</Text>
@@ -291,6 +299,13 @@ const styles = StyleSheet.create({
     color: '#666',
     fontStyle: 'italic',
     marginBottom: 20,
+  },
+  wordImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    marginVertical: 15,
+    backgroundColor: '#f0f0f0',
   },
   section: {
     marginTop: 25,

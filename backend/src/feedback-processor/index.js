@@ -1,6 +1,6 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, PutCommand, UpdateCommand, GetCommand } = require('@aws-sdk/lib-dynamodb');
-const { v4: uuidv4 } = require('uuid');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { randomUUID } from 'crypto';
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -12,7 +12,7 @@ const FEEDBACK_TABLE = process.env.FEEDBACK_TABLE;
  * Lambda handler for processing user feedback
  * API: POST /feedback
  */
-exports.handler = async (event) => {
+export const handler = async (event) => {
   console.log('Feedback processor triggered', { event });
 
   try {
@@ -56,7 +56,7 @@ exports.handler = async (event) => {
     }
 
     // Create feedback entry
-    const feedbackId = uuidv4();
+    const feedbackId = randomUUID();
     const feedbackData = {
       feedbackId,
       userId,

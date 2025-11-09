@@ -1,9 +1,9 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, ScanCommand, GetCommand, PutCommand } = require('@aws-sdk/lib-dynamodb');
-const { SNSClient, PublishCommand } = require('@aws-sdk/client-sns');
-const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
-const axios = require('axios');
-const { v4: uuidv4 } = require('uuid');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, ScanCommand, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import axios from 'axios';
+import { randomUUID } from 'crypto';
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -18,7 +18,7 @@ const NOTIFICATION_LOGS_TABLE = process.env.NOTIFICATION_LOGS_TABLE;
  * Lambda handler for notification dispatcher
  * Triggered hourly by EventBridge to check and send notifications
  */
-exports.handler = async (event) => {
+export const handler = async (event) => {
   console.log('Notification dispatcher triggered', { event });
 
   try {
@@ -294,7 +294,7 @@ async function logNotification(userId, channel, status, date, errorMessage = nul
   const params = {
     TableName: NOTIFICATION_LOGS_TABLE,
     Item: {
-      logId: uuidv4(),
+      logId: randomUUID(),
       userId,
       date,
       channel,

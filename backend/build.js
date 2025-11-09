@@ -1,6 +1,10 @@
-const archiver = require('archiver');
-const fs = require('fs');
-const path = require('path');
+import archiver from 'archiver';
+import fs from 'fs';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Lambda functions to build
 const functions = [
@@ -38,6 +42,14 @@ functions.forEach(funcName => {
   });
 
   archive.pipe(output);
+
+  // Add package.json to enable ESM in Lambda
+  const packageJson = {
+    type: 'module',
+    name: funcName,
+    version: '1.0.0'
+  };
+  archive.append(JSON.stringify(packageJson, null, 2), { name: 'package.json' });
 
   // Add function source
   const funcPath = path.join(__dirname, 'src', funcName);

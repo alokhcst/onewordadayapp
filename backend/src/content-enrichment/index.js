@@ -1,9 +1,9 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, PutCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { SecretsManagerClient, GetSecretValueCommand } = require('@aws-sdk/client-secrets-manager');
-const axios = require('axios');
-const { v4: uuidv4 } = require('uuid');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import axios from 'axios';
+import { randomUUID } from 'crypto';
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -18,7 +18,7 @@ const IMAGES_BUCKET = process.env.IMAGES_BUCKET;
  * Lambda handler for content enrichment
  * Enriches word bank with definitions, pronunciations, audio, and images
  */
-exports.handler = async (event) => {
+export const handler = async (event) => {
   console.log('Content enrichment triggered', { event });
 
   try {
@@ -48,7 +48,7 @@ exports.handler = async (event) => {
 
     // Create word entry
     const wordData = {
-      wordId: uuidv4(),
+      wordId: randomUUID(),
       word: word.toLowerCase(),
       definition: definition.definition,
       partOfSpeech: partOfSpeech || definition.partOfSpeech || 'noun',

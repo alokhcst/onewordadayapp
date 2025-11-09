@@ -1,7 +1,8 @@
 {
   "name": "onewordaday-backend",
   "version": "1.0.0",
-  "description": "Backend Lambda functions for One Word A Day app",
+  "type": "module",
+  "description": "Backend Lambda functions for One Word A Day app - Using ES Modules",
   "scripts": {
     "build": "node build.js",
     "deploy": "npm run build && cd ../terraform && terraform apply"
@@ -14,8 +15,9 @@
     "@aws-sdk/client-ses": "^3.540.0",
     "@aws-sdk/client-bedrock-runtime": "^3.540.0",
     "@aws-sdk/client-secrets-manager": "^3.540.0",
+    "@aws-sdk/client-lambda": "^3.540.0",
     "axios": "^1.6.7",
-    "uuid": "^8.3.2"
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "archiver": "^6.0.1"

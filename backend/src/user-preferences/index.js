@@ -1,5 +1,5 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -10,7 +10,7 @@ const USERS_TABLE = process.env.USERS_TABLE;
  * Lambda handler for user preferences management
  * API: GET /user/profile, PUT /user/profile
  */
-exports.handler = async (event) => {
+export const handler = async (event) => {
   console.log('User preferences handler triggered', { event });
 
   try {

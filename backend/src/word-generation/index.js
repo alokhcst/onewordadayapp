@@ -1,6 +1,6 @@
-const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
-const { DynamoDBDocumentClient, GetCommand, PutCommand, ScanCommand, QueryCommand } = require('@aws-sdk/lib-dynamodb');
-const { LambdaClient, InvokeCommand } = require('@aws-sdk/client-lambda');
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
 const ddbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(ddbClient);
@@ -17,7 +17,7 @@ const USE_AI_GENERATION = process.env.USE_AI_GENERATION === 'true';
  * Triggered by EventBridge daily at midnight UTC
  * Now supports both AI-based and word bank generation
  */
-exports.handler = async (event) => {
+export const handler = async (event) => {
   console.log('Starting daily word generation', { event, useAI: USE_AI_GENERATION });
 
   try {
