@@ -75,6 +75,27 @@ locals {
 }
 
 # Modules
+
+# Web Hosting (S3 + CloudFront) - Created first for OAuth URLs
+module "web_hosting" {
+  source = "./modules/web-hosting"
+  
+  app_name              = var.project_name
+  environment           = var.environment
+  cloudfront_price_class = "PriceClass_100" # US, Canada, Europe
+  log_retention_days    = 7
+  
+  # Custom domain configuration (optional)
+  # IMPORTANT: Certificate must be VALIDATED before enabling
+  # To validate: Add the CNAME record shown in ACM to your DNS
+  # acm_certificate_arn = "arn:aws:acm:us-east-1:268017144546:certificate/51587618-2852-4005-b718-6d4ed3aaceda"
+  # custom_domain       = "app.darptech.com"
+  
+  # Using CloudFront default certificate for now
+  acm_certificate_arn = ""
+  custom_domain       = ""
+}
+
 module "cognito" {
   source = "./modules/cognito"
   
@@ -82,6 +103,13 @@ module "cognito" {
   environment           = var.environment
   google_client_id      = var.google_client_id
   google_client_secret  = var.google_client_secret
+  web_app_urls          = concat(
+    [
+      module.web_hosting.cloudfront_url,
+      module.web_hosting.s3_website_url
+    ],
+    module.web_hosting.custom_domain != "" ? ["https://${module.web_hosting.custom_domain}"] : []
+  )
 }
 
 module "dynamodb" {
@@ -177,5 +205,26 @@ output "api_gateway_url" {
 output "cloudfront_domain" {
   description = "CloudFront Distribution Domain"
   value       = module.s3.cloudfront_domain
+}
+
+# Web App Outputs
+output "web_app_s3_bucket" {
+  description = "S3 bucket name for web app"
+  value       = module.web_hosting.s3_bucket_name
+}
+
+output "web_app_s3_url" {
+  description = "S3 static website URL"
+  value       = module.web_hosting.s3_website_url
+}
+
+output "web_app_cloudfront_url" {
+  description = "CloudFront distribution URL for web app"
+  value       = module.web_hosting.cloudfront_url
+}
+
+output "web_app_cloudfront_id" {
+  description = "CloudFront distribution ID (for cache invalidation)"
+  value       = module.web_hosting.cloudfront_distribution_id
 }
 

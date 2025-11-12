@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { getCurrentAuthUser, authSignIn, authSignUp, authSignOut, authConfirmSignUp } from '@/lib/auth';
+import { authConfirmSignUp, authResendSignUpCode, authSignIn, authSignOut, authSignUp, getCurrentAuthUser, signInWithGoogle } from '@/lib/auth';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 interface User {
   userId: string;
   username: string;
+  name?: string;  // Display name from Cognito userAttributes
   email?: string;
 }
 
@@ -12,8 +13,10 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<any>;
-  confirmSignUp: (email: string, code: string) => Promise<void>;
+  confirmSignUp: (email: string, code: string) => Promise<any>;
+  resendSignUpCode: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -32,20 +35,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuthStatus = async () => {
     try {
+      console.log('[AuthContext] Checking auth status...');
       const currentUser = await getCurrentAuthUser();
+      
       if (currentUser && currentUser.userId) {
+        console.log('[AuthContext] User found:', {
+          userId: currentUser.userId,
+          username: currentUser.username,
+          name: currentUser.name,
+          email: currentUser.email,
+        });
+        
         setUser({
           userId: currentUser.userId,
           username: currentUser.username,
+          name: currentUser.name,  // Display name from userAttributes
+          email: currentUser.email || currentUser.signInDetails?.loginId || currentUser.username,
         });
         setIsAuthenticated(true);
       } else {
+        console.log('[AuthContext] No user found');
         setUser(null);
         setIsAuthenticated(false);
       }
     } catch (error: any) {
       // Shouldn't happen since getCurrentAuthUser catches errors
-      console.error('Unexpected error checking auth status:', error);
+      console.error('[AuthContext] Unexpected error checking auth status:', error);
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -83,9 +98,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const confirmSignUp = async (email: string, code: string) => {
     try {
-      await authConfirmSignUp(email, code);
+      const result = await authConfirmSignUp(email, code);
+      return result;
     } catch (error) {
       console.error('Confirm sign up error:', error);
+      throw error;
+    }
+  };
+
+  const resendSignUpCode = async (email: string) => {
+    try {
+      await authResendSignUpCode(email);
+    } catch (error) {
+      console.error('Resend code error:', error);
       throw error;
     }
   };
@@ -112,8 +137,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading,
         isAuthenticated,
         signIn,
+        signInWithGoogle,
         signUp,
         confirmSignUp,
+        resendSignUpCode,
         signOut,
         refreshUser,
       }}

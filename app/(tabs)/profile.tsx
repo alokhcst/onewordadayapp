@@ -28,53 +28,125 @@ export default function ProfileScreen() {
   }, []);
 
   const loadProfile = async () => {
+    console.log('========================================');
+    console.log('PROFILE - LOAD PROFILE');
+    console.log('========================================');
+    console.log('  - Auth context user:', {
+      username: user?.username,
+      name: user?.name,
+      email: user?.email,
+      userId: user?.userId
+    });
+    
     try {
+      console.log('  - Calling api.getUserProfile()...');
       const response = await api.getUserProfile();
+      
+      console.log('  - API Response:');
+      console.log('    * Message:', response.message);
+      console.log('    * Profile exists:', !!response.profile);
+      console.log('    * isNew:', response.isNew);
+      
+      if (response.profile) {
+        console.log('    * Profile data:');
+        console.log('      - userId:', response.profile.userId);
+        console.log('      - email:', response.profile.email);
+        console.log('      - name:', response.profile.name);
+        console.log('      - ageGroup:', response.profile.ageGroup);
+        console.log('      - context:', response.profile.context);
+        console.log('      - examPrep:', response.profile.examPrep);
+      }
+      
+      console.log('  - Setting state...');
       setProfile(response.profile);
-      setEditedName(response.profile?.name || '');
-      setEditedEmail(response.profile?.email || user?.username || '');
+      
+      // Use profile data, fallback to user context data
+      // Priority: user.name (from Cognito attributes) > profile.name > user.username > 'User'
+      const finalName = user?.name || response.profile?.name || user?.username || 'User';
+      const finalEmail = user?.email || response.profile?.email || user?.username || '';
+      
+      console.log('  - Determining display values:');
+      console.log('    * user.name:', user?.name);
+      console.log('    * profile.name:', response.profile?.name);
+      console.log('    * user.username:', user?.username);
+      console.log('    * finalName:', finalName);
+      console.log('    * finalEmail:', finalEmail);
+      
+      setEditedName(finalName);
+      setEditedEmail(finalEmail);
       setEditedAgeGroup(response.profile?.ageGroup || '');
       setEditedContext(response.profile?.context || '');
       setEditedExamPrep(response.profile?.examPrep || '');
-      setNotificationsEnabled(response.profile?.notificationPreferences?.dailyWord?.enabled || true);
-    } catch (error) {
-      console.error('Error loading profile:', error);
+      setNotificationsEnabled(response.profile?.notificationPreferences?.dailyWord?.enabled !== false);
+      
+      console.log('  - State updated with:');
+      console.log('    * editedName:', finalName);
+      console.log('    * editedEmail:', finalEmail);
+      console.log('    * editedAgeGroup:', response.profile?.ageGroup || '');
+      console.log('    * editedContext:', response.profile?.context || '');
+      console.log('========================================\n');
+    } catch (error: any) {
+      console.log('  - ERROR loading profile:');
+      console.error('    * Error name:', error.name);
+      console.error('    * Error message:', error.message);
+      console.error('    * Status:', error.response?.status);
+      console.error('    * Full error:', error);
+      console.log('========================================\n');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleEditProfile = () => {
-    setEditedName(profile?.name || '');
-    setEditedEmail(profile?.email || user?.username || '');
+    setEditedName(user?.name || profile?.name || user?.username || '');
+    setEditedEmail(user?.email || profile?.email || user?.username || '');
     setIsEditing(true);
   };
 
   const handleCancelEdit = () => {
-    setEditedName(profile?.name || '');
-    setEditedEmail(profile?.email || user?.username || '');
+    setEditedName(user?.name || profile?.name || user?.username || '');
+    setEditedEmail(user?.email || profile?.email || user?.username || '');
     setIsEditing(false);
   };
 
   const handleSaveProfile = async () => {
+    console.log('========================================');
+    console.log('PROFILE - SAVE PROFILE');
+    console.log('========================================');
+    console.log('  - editedName:', editedName);
+    console.log('  - editedEmail:', editedEmail);
+    
     if (!editedName.trim()) {
+      console.log('  - ERROR: Name is empty');
+      console.log('========================================\n');
       showError('Name cannot be empty');
       return;
     }
 
     setIsSaving(true);
     try {
-      await api.updateUserProfile({
+      const updateData = {
         name: editedName.trim(),
         email: editedEmail.trim(),
-      });
+      };
+      
+      console.log('  - Calling api.updateUserProfile with:', updateData);
+      await api.updateUserProfile(updateData);
 
-      // Reload profile to get updated data
+      console.log('  - Profile updated, reloading...');
       await loadProfile();
+      
       setIsEditing(false);
       showSuccess('Profile updated successfully!');
+      console.log('  - Save complete');
+      console.log('========================================\n');
     } catch (error: any) {
-      console.error('Error updating profile:', error);
+      console.log('  - ERROR saving profile:');
+      console.error('    * Error name:', error.name);
+      console.error('    * Error message:', error.message);
+      console.error('    * Status:', error.response?.status);
+      console.error('    * Full error:', error);
+      console.log('========================================\n');
       showError('Failed to update profile. Please try again.');
     } finally {
       setIsSaving(false);
@@ -96,6 +168,13 @@ export default function ProfileScreen() {
   };
 
   const handleSaveLearningProfile = async () => {
+    console.log('========================================');
+    console.log('PROFILE - SAVE LEARNING PROFILE');
+    console.log('========================================');
+    console.log('  - editedAgeGroup:', editedAgeGroup);
+    console.log('  - editedContext:', editedContext);
+    console.log('  - editedExamPrep:', editedExamPrep);
+    
     setIsSaving(true);
     try {
       const updates: any = {
@@ -107,14 +186,23 @@ export default function ProfileScreen() {
         updates.examPrep = editedExamPrep;
       }
 
+      console.log('  - Calling api.updateUserProfile with:', updates);
       await api.updateUserProfile(updates);
 
-      // Reload profile to get updated data
+      console.log('  - Learning profile updated, reloading...');
       await loadProfile();
+      
       setIsEditingLearning(false);
       showSuccess('Learning profile updated successfully!');
+      console.log('  - Save complete');
+      console.log('========================================\n');
     } catch (error: any) {
-      console.error('Error updating learning profile:', error);
+      console.log('  - ERROR saving learning profile:');
+      console.error('    * Error name:', error.name);
+      console.error('    * Error message:', error.message);
+      console.error('    * Status:', error.response?.status);
+      console.error('    * Full error:', error);
+      console.log('========================================\n');
       showError('Failed to update learning profile. Please try again.');
     } finally {
       setIsSaving(false);
@@ -145,22 +233,33 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = async () => {
+    console.log('========================================');
+    console.log('PROFILE - SIGN OUT');
+    console.log('========================================');
+    
     const confirmed = await confirm('Are you sure you want to sign out?');
 
     if (!confirmed) {
-      console.log('Sign out cancelled');
+      console.log('  - Sign out cancelled by user');
+      console.log('========================================\n');
       return;
     }
 
     try {
-      console.log('Starting sign out...');
+      console.log('  - Calling signOut()...');
       await signOut();
-      console.log('Sign out complete, navigating...');
+      console.log('  - Sign out complete');
+      console.log('  - Navigating to signin page...');
       
       // Navigate to sign-in page
       router.replace('/(auth)/signin');
+      console.log('========================================\n');
     } catch (error: any) {
-      console.error('Sign out error:', error);
+      console.log('  - ERROR signing out:');
+      console.error('    * Error name:', error.name);
+      console.error('    * Error message:', error.message);
+      console.error('    * Full error:', error);
+      console.log('========================================\n');
       showError(error.message || 'Failed to sign out');
     }
   };

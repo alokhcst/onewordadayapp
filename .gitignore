@@ -54,6 +54,7 @@ web-build/
 **/terraform.tfstate.backup
 **/tfplan
 **/tfplan.binary
+tfplan
 terraform/terraform.tfvars
 terraform/*.tfvars
 !terraform/terraform.tfvars.example
@@ -61,11 +62,25 @@ terraform/*.tfvars
 !*.tfvars.example
 .terraformrc
 terraform.rc
+.terraform.tfstate.lock.info
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
 
 # Backend
 backend/dist/
 backend/layers/nodejs/
 backend/layers/dependencies.zip
+backend/**/*.zip
+backend/**/node_modules/
+backend/**/package-lock.json
+
+# Lambda specific
+**/function.zip
+lambda-*.zip
 
 # Misc
 *.log
@@ -89,11 +104,6 @@ backend/layers/dependencies.zip
 
 # AWS
 .aws/
-aws-exports.js
-amplify-export/
-amplify/
-#amplify-do-not-edit-begin
-#amplify-do-not-edit-end
 
 # Testing
 coverage/
@@ -120,6 +130,16 @@ secrets.yml
 !backend/layers/dependencies.zip
 deployment/
 lambda-packages/
+function.zip
+**/function.zip
+backend/**/function.zip
+
+# Test and temp files
+test-*.json
+*-response.json
+*-payload.json
+update-word.json
+today-word.json
 
 # Logs
 logs/
@@ -137,3 +157,29 @@ Desktop.ini
 
 expo-env.d.ts
 # @end expo-cli
+
+# ============================================
+# DOCUMENTATION FILES (SHOULD BE COMMITTED)
+# ============================================
+# These are intentionally NOT ignored:
+# - *.md files (README, feature docs, etc.)
+# - ARCHITECTURE_*.md
+# - *_SUMMARY.md
+# - *_FIX.md
+# - *_SETUP.md
+
+# ============================================
+# PROJECT SPECIFIC EXCLUSIONS
+# ============================================
+
+# AWS deployment outputs
+aws-outputs.json
+deployment-info.json
+
+# Debug and test data
+debug-*.json
+mock-*.json
+
+# Temporary script outputs
+*.tmp.ps1
+*.backup.ps1

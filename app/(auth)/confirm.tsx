@@ -1,42 +1,118 @@
-import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ConfirmScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { email, ageGroup, context, examPrep } = params;
-  const { confirmSignUp } = useAuth();
+  const { email, password } = params;
+  const { confirmSignUp, resendSignUpCode, signIn } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const handleConfirm = async () => {
     if (!code || code.length !== 6) {
-      Alert.alert('Error', 'Please enter the 6-digit code');
+      showError('Please enter the 6-digit code');
       return;
     }
 
     setIsLoading(true);
     try {
-      await confirmSignUp(email as string, code);
-      Alert.alert('Success', 'Your email has been verified!', [
-        { 
-          text: 'OK', 
-          onPress: () => router.replace({
-            pathname: '/(auth)/onboarding',
-            params: {
-              ageGroup: ageGroup || '',
-              context: context || '',
-              examPrep: examPrep || '',
-            },
-          })
+      console.log('Confirming signup for:', email);
+      const result = await confirmSignUp(email as string, code);
+      console.log('Confirmation result:', result);
+      
+      // Check if user was already confirmed
+      if (result?.alreadyConfirmed) {
+        if (Platform.OS === 'web') {
+          showSuccess('Email already verified! Redirecting to sign in...');
+          setTimeout(() => {
+            router.replace('/(auth)/signin');
+          }, 1000);
+        } else {
+          Alert.alert('Already Verified', 'Your email is already verified. You can sign in now!', [
+            {
+              text: 'Sign In',
+              onPress: () => router.replace('/(auth)/signin')
+            }
+          ]);
         }
-      ]);
+      } else {
+        // Success - sign in the user automatically if we have password
+        if (password) {
+          console.log('Auto-signing in user after confirmation...');
+          try {
+            await signIn(email as string, password as string);
+            console.log('User signed in successfully');
+            
+            showSuccess('Email verified! Completing setup...');
+            
+            // Navigate to onboarding - user is now authenticated and will fill profile there
+            setTimeout(() => {
+              router.replace('/(auth)/onboarding');
+            }, 500);
+          } catch (signInError) {
+            console.error('Auto sign-in failed:', signInError);
+            // If auto sign-in fails, redirect to sign-in page
+            showSuccess('Email verified! Please sign in to continue.');
+            setTimeout(() => {
+              router.replace('/(auth)/signin');
+            }, 1500);
+          }
+        } else {
+          // No password - redirect to sign in
+          showSuccess('Email verified! Please sign in to continue.');
+          setTimeout(() => {
+            router.replace('/(auth)/signin');
+          }, 1500);
+        }
+      }
     } catch (error: any) {
-      Alert.alert('Verification Failed', error.message || 'Invalid code');
+      console.error('Confirmation error:', error);
+      
+      // Handle specific error cases
+      if (error.message?.includes('already confirmed') || 
+          error.message?.includes('CONFIRMED')) {
+        if (Platform.OS === 'web') {
+          showSuccess('Email already verified! Redirecting to sign in...');
+          setTimeout(() => {
+            router.replace('/(auth)/signin');
+          }, 1000);
+        } else {
+          Alert.alert('Already Verified', 'Your email is already verified. You can sign in now!', [
+            {
+              text: 'Sign In',
+              onPress: () => router.replace('/(auth)/signin')
+            }
+          ]);
+        }
+      } else if (error.message?.includes('Invalid code') || 
+                 error.message?.includes('Code mismatch') ||
+                 error.message?.includes('CodeMismatchException')) {
+        showError('The code you entered is incorrect. Please check your email and try again.');
+      } else if (error.message?.includes('ExpiredCode')) {
+        showError('The verification code has expired. Click "Resend" to get a new code.');
+      } else {
+        showError(error.message || 'Invalid code. Please try again.');
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setIsResending(true);
+    try {
+      await resendSignUpCode(email as string);
+      showSuccess('A new verification code has been sent to your email!');
+    } catch (error: any) {
+      showError(error.message || 'Failed to resend code. Please try again.');
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -71,8 +147,16 @@ export default function ConfirmScreen() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.linkButton}>
-            <Text style={styles.linkText}>Didn't receive code? <Text style={styles.linkTextBold}>Resend</Text></Text>
+          <TouchableOpacity 
+            style={styles.linkButton} 
+            onPress={handleResendCode}
+            disabled={isResending}
+          >
+            <Text style={styles.linkText}>
+              Didn't receive code? <Text style={styles.linkTextBold}>
+                {isResending ? 'Sending...' : 'Resend'}
+              </Text>
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

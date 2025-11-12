@@ -10,10 +10,16 @@ export const awsConfig = {
       // identityPoolId is optional - only needed for AWS service access, not for User Pool auth
       loginWith: {
         oauth: {
-          domain: process.env.EXPO_PUBLIC_OAUTH_DOMAIN || 'your-domain.auth.us-east-1.amazoncognito.com',
+          domain: process.env.EXPO_PUBLIC_OAUTH_DOMAIN || 'onewordaday-production.auth.us-east-1.amazoncognito.com',
           scopes: ['email', 'openid', 'profile'],
-          redirectSignIn: ['onewordadayapp://'],
-          redirectSignOut: ['onewordadayapp://logout'],
+          redirectSignIn: [
+            'onewordadayapp://',
+            typeof window !== 'undefined' ? window.location.origin : 'http://localhost:19006'
+          ],
+          redirectSignOut: [
+            'onewordadayapp://logout',
+            typeof window !== 'undefined' ? window.location.origin + '/logout' : 'http://localhost:19006/logout'
+          ],
           responseType: 'code',
         },
       },

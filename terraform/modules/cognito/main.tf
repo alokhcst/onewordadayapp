@@ -86,7 +86,10 @@ resource "aws_cognito_user_pool_client" "main" {
 
   generate_secret = false
   
-  depends_on = [aws_cognito_identity_provider.google]
+  depends_on = [
+    aws_cognito_user_pool_domain.main,
+    aws_cognito_identity_provider.google
+  ]
 
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
@@ -94,20 +97,29 @@ resource "aws_cognito_user_pool_client" "main" {
     "ALLOW_USER_SRP_AUTH"
   ]
 
-  supported_identity_providers = var.google_client_id != "" ? ["GOOGLE"] : ["COGNITO"]
+  supported_identity_providers = var.google_client_id != "" ? ["COGNITO", "Google"] : ["COGNITO"]
 
   allowed_oauth_flows                  = ["code", "implicit"]
   allowed_oauth_scopes                 = ["email", "openid", "profile"]
   allowed_oauth_flows_user_pool_client = true
 
-  callback_urls = [
-    "onewordadayapp://",
-    "exp://localhost:8081"
-  ]
+  callback_urls = concat(
+    [
+      "onewordadayapp://",
+      "exp://localhost:8081",
+      "http://localhost:19006",
+      "http://localhost:19006/",
+    ],
+    [for url in var.web_app_urls : url if can(regex("^https://", url))]
+  )
 
-  logout_urls = [
-    "onewordadayapp://logout"
-  ]
+  logout_urls = concat(
+    [
+      "onewordadayapp://logout",
+      "http://localhost:19006/logout",
+    ],
+    [for url in var.web_app_urls : "${url}/logout" if can(regex("^https://", url))]
+  )
 
   read_attributes = [
     "email",
@@ -123,6 +135,12 @@ resource "aws_cognito_user_pool_client" "main" {
     access_token  = "hours"
     id_token      = "hours"
   }
+}
+
+# Cognito User Pool Domain for Hosted UI
+resource "aws_cognito_user_pool_domain" "main" {
+  domain       = "${var.name_prefix}"
+  user_pool_id = aws_cognito_user_pool.main.id
 }
 
 # Cognito Identity Provider (Google) - Optional
@@ -233,6 +251,12 @@ variable "google_client_secret" {
   sensitive   = true
 }
 
+variable "web_app_urls" {
+  type        = list(string)
+  default     = []
+  description = "Web app URLs for OAuth redirects (CloudFront, S3, custom domains)"
+}
+
 output "user_pool_id" {
   value = aws_cognito_user_pool.main.id
 }
@@ -248,4 +272,14 @@ output "client_id" {
 output "identity_pool_id" {
   value = aws_cognito_identity_pool.main.id
 }
+
+output "user_pool_domain" {
+  value = aws_cognito_user_pool_domain.main.domain
+}
+
+output "user_pool_domain_full" {
+  value = "${aws_cognito_user_pool_domain.main.domain}.auth.${data.aws_region.current.name}.amazoncognito.com"
+}
+
+data "aws_region" "current" {}
 

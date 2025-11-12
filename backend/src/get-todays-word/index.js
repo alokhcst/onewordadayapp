@@ -32,31 +32,43 @@ const LLM_PROVIDERS = {
  * API: GET /word/today
  */
 export const handler = async (event) => {
-  console.log('Get todays word handler triggered', { event });
+  console.log('========================================');
+  console.log('GET TODAY\'S WORD - Handler Start');
+  console.log('========================================');
+  console.log('Event:', JSON.stringify(event, null, 2));
 
   try {
     // Extract user ID from Cognito authorizer
     const userId = event.requestContext?.authorizer?.claims?.sub;
     
+    console.log('Step 1: Extracting userId:', userId);
+    
     if (!userId) {
+      console.log('ERROR: No userId found in request');
       return {
         statusCode: 401,
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: 'Unauthorized' })
+        body: JSON.stringify({ 
+          message: 'Unauthorized',
+          error: 'Missing user authentication'
+        })
       };
     }
 
     // Get today's date
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-
-    // Query parameters for specific date (optional)
     const queryDate = event.queryStringParameters?.date || today;
+    
+    console.log('Step 2: Date parameters');
+    console.log('  - Today:', today);
+    console.log('  - Query date:', queryDate);
 
-    // Get word for the specified date
-    const params = {
+    // First, try to get user-specific word
+    console.log('Step 3: Querying for user-specific word');
+    const userParams = {
       TableName: DAILY_WORDS_TABLE,
       Key: {
         userId,
@@ -64,40 +76,63 @@ export const handler = async (event) => {
       }
     };
 
-    const result = await docClient.send(new GetCommand(params));
+    let result = await docClient.send(new GetCommand(userParams));
+    console.log('  - User-specific word found:', !!result.Item);
 
-    console.log(`AGWord START1: ${result.Item.practiceStatus}`);
+    // If no user-specific word, try to get global word
+    if (!result.Item) {
+      console.log('Step 4: Querying for global word');
+      const globalParams = {
+        TableName: DAILY_WORDS_TABLE,
+        Key: {
+          userId: 'GLOBAL',
+          date: queryDate
+        }
+      };
+      
+      result = await docClient.send(new GetCommand(globalParams));
+      console.log('  - Global word found:', !!result.Item);
+    }
+
+    // Check practice status safely
+    const practiceStatus = result.Item?.practiceStatus || 'not_started';
+    console.log('Step 5: Practice status:', practiceStatus);
 
     // If word exists and was skipped, generate a new one
-    if (result.Item && result.Item.practiceStatus === 'skipped' && queryDate === today) {
-      console.log(`Word was skipped, generating new word for user ${userId}`);
+    if (result.Item && practiceStatus === 'skipped' && queryDate === today) {
+      console.log('Step 6: Word was skipped, generating new word');
       
-      // Get user profile
-      const user = await getUserProfile(userId);
-      
-      console.log(`AGWord START2: ${user.userId}`);
-     
-      // Generate new word
-      const newWord = await generateNewWord(user, queryDate);
-      
-      return {
-        statusCode: 200,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: 'New word generated successfully',
-          word: newWord,
-          regenerated: true
-        })
-      };
+      try {
+        // Get user profile
+        const user = await getUserProfile(userId);
+        console.log('  - User profile loaded:', user.userId);
+       
+        // Generate new word
+        const newWord = await generateNewWord(user, queryDate);
+        console.log('  - New word generated:', newWord.word);
+        
+        return {
+          statusCode: 200,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: 'New word generated successfully',
+            word: newWord,
+            regenerated: true
+          })
+        };
+      } catch (genError) {
+        console.error('ERROR generating new word:', genError);
+        // Continue to return the skipped word instead of failing
+      }
     }
 
     if (!result.Item) {
       // Try to generate a word if none exists for today
       if (queryDate === today) {
-        console.log(`No word found for today, generating for user ${userId}`);
+        console.log('Step 7: No word found for today, generating new word');
         
         const user = await getUserProfile(userId);
         const newWord = await generateNewWord(user, queryDate);
@@ -116,6 +151,7 @@ export const handler = async (event) => {
         };
       }
       
+      console.log('Step 8: No word found for past/future date');
       return {
         statusCode: 404,
         headers: {
@@ -125,11 +161,15 @@ export const handler = async (event) => {
         body: JSON.stringify({
           message: 'Word not found for this date',
           date: queryDate,
-          help: 'Word generation happens daily at midnight UTC. Please check back later.'
+          help: 'Word generation happens daily. Please check back for this date.'
         })
       };
     }
 
+    console.log('Step 9: Returning word successfully');
+    console.log('  - Word:', result.Item?.word);
+    console.log('========================================\n');
+    
     return {
       statusCode: 200,
       headers: {
@@ -142,35 +182,59 @@ export const handler = async (event) => {
       })
     };
   } catch (error) {
-    console.error('Error getting todays word:', error);
+    console.error('========================================');
+    console.error('ERROR in GET TODAY\'S WORD Handler');
+    console.error('========================================');
+    console.error('Error type:', error.name);
+    console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     console.error('Error details:', {
       name: error.name,
       message: error.message,
       code: error.code,
+      statusCode: error.statusCode,
       userId: event.requestContext?.authorizer?.claims?.sub
     });
+    console.error('========================================\n');
+    
+    // Determine appropriate status code
+    let statusCode = 500;
+    let errorMessage = 'An unexpected error occurred while retrieving the word';
+    
+    if (error.name === 'ResourceNotFoundException') {
+      statusCode = 404;
+      errorMessage = 'Required database table not found';
+    } else if (error.name === 'ValidationException') {
+      statusCode = 400;
+      errorMessage = 'Invalid request parameters';
+    } else if (error.code === 'AccessDeniedException') {
+      statusCode = 403;
+      errorMessage = 'Access denied to required resources';
+    }
     
     return {
-      statusCode: 500,
+      statusCode,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        message: 'Error retrieving word',
+        message: errorMessage,
         error: error.message,
         errorType: error.name,
-        stack: error.stack
+        // Only include stack trace in development
+        ...(process.env.ENVIRONMENT !== 'production' && { stack: error.stack })
       })
     };
   }
 };
 
 /**
- * Get user profile from DynamoDB
+ * Get user profile from DynamoDB with error handling
  */
 async function getUserProfile(userId) {
+  console.log('getUserProfile: Fetching profile for userId:', userId);
+  
   try {
     const params = {
       TableName: USERS_TABLE,
@@ -178,6 +242,13 @@ async function getUserProfile(userId) {
     };
 
     const result = await docClient.send(new GetCommand(params));
+    
+    if (!result.Item) {
+      console.log('getUserProfile: No profile found, using defaults');
+    } else {
+      console.log('getUserProfile: Profile loaded successfully');
+    }
+    
     return result.Item || {
       userId,
       ageGroup: 'adult',
@@ -185,7 +256,10 @@ async function getUserProfile(userId) {
       difficultyPreference: 'medium'
     };
   } catch (error) {
-    console.error('Error getting user profile:', error);
+    console.error('getUserProfile ERROR:', error.message);
+    console.error('  - Error type:', error.name);
+    console.error('  - Using default profile as fallback');
+    
     // Return default profile if error
     return {
       userId,
