@@ -1,54 +1,84 @@
+// Import useToast hook to show success/error messages and confirmation dialogs
 import { useToast } from '@/contexts/ToastContext';
+// Import API client to make HTTP requests to backend
 import { api } from '@/lib/api';
+// Import Ionicons for icon components (volume, chat, arrow icons)
 import { Ionicons } from '@expo/vector-icons';
+// Import useRouter hook for navigation
 import { useRouter } from 'expo-router';
+// Import Expo Speech API for text-to-speech functionality
 import * as Speech from 'expo-speech';
+// Import React hooks: useEffect for side effects, useState for component state
 import { useEffect, useState } from 'react';
+// Import React Native UI components
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+// Main component - displays today's word of the day
 export default function TodayScreen() {
+  // Get router object for navigation
   const router = useRouter();
+  // Get toast functions: showSuccess for success messages, showError for errors, confirm for confirmation dialogs
   const { showSuccess, showError, confirm } = useToast();
+  // State variable to store the word data object (word, definition, examples, etc.)
   const [word, setWord] = useState<any>(null);
+  // State variable to track if word is being loaded from API
   const [isLoading, setIsLoading] = useState(true);
+  // State variable to track if text-to-speech is currently playing
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // Effect hook that runs once when component mounts
   useEffect(() => {
+    // Load today's word when screen first appears
     loadTodaysWord();
-  }, []);
+  }, []); // Empty dependency array means this runs only once on mount
 
+  // Async function to fetch today's word from the API
   const loadTodaysWord = async () => {
     try {
+      // Call API endpoint to get today's word for the authenticated user
       const response = await api.getTodaysWord();
+      // Store the word data in state
       setWord(response.word);
     } catch (error: any) {
+      // Log error for debugging
       console.error('Error loading word:', error);
+      // If API returns 404, show user-friendly message
       if (error.response?.status === 404) {
+        // Show native alert dialog
         Alert.alert('No Word Yet', 'Your daily word will be generated soon. Check back later!');
       }
     } finally {
+      // Always set loading to false, even if there was an error
       setIsLoading(false);
     }
   };
 
+  // Function to handle text-to-speech - speak the word aloud
   const handleSpeak = async () => {
+    // If no word is loaded, exit early
     if (!word) return;
 
+    // If currently speaking, stop the speech
     if (isSpeaking) {
-      Speech.stop();
-      setIsSpeaking(false);
+      Speech.stop(); // Stop the current speech
+      setIsSpeaking(false); // Update state to reflect stopped state
     } else {
-      setIsSpeaking(true);
+      // If not speaking, start speaking the word
+      setIsSpeaking(true); // Update state to reflect speaking state
+      // Use Expo Speech to speak the word text
       Speech.speak(word.word, {
-        onDone: () => setIsSpeaking(false),
-        onStopped: () => setIsSpeaking(false),
-        onError: () => setIsSpeaking(false),
+        onDone: () => setIsSpeaking(false), // When speech finishes, update state
+        onStopped: () => setIsSpeaking(false), // When speech is stopped, update state
+        onError: () => setIsSpeaking(false), // If error occurs, update state
       });
     }
   };
 
+  // Function to navigate to feedback screen
   const handleFeedback = () => {
+    // Only navigate if word is loaded
     if (word) {
+      // Navigate to feedback screen, passing word ID and date as parameters
       router.push({
         pathname: '/feedback',
         params: { wordId: word.wordId, date: word.date },
@@ -56,31 +86,40 @@ export default function TodayScreen() {
     }
   };
 
+  // Async function to skip current word and get a new one
   const handleNextWord = async () => {
+    // Show confirmation dialog to user
     const confirmed = await confirm('Skip this word and get a new one?');
 
+    // If user cancels, exit early
     if (!confirmed) return;
 
     try {
+      // Set loading state to show loading indicator
       setIsLoading(true);
-      // Mark current word as skipped
+      // Mark current word as skipped by submitting feedback
+      // This tells the backend the user wants to skip this word
       await api.submitFeedback({
-        wordId: word.wordId,
-        date: word.date,
-        rating: 0,
-        practiced: false,
-        encountered: false,
-        difficulty: undefined,
-        comments: 'Skipped to next word',
+        wordId: word.wordId, // ID of word being skipped
+        date: word.date, // Date of the word
+        rating: 0, // No rating (skipped)
+        practiced: false, // User didn't practice it
+        encountered: false, // User didn't encounter it
+        difficulty: undefined, // No difficulty rating
+        comments: 'Skipped to next word', // Comment explaining the action
       });
       
-      // Reload word - this should trigger new word generation
+      // Reload word from API - backend should generate a new word since current was skipped
       await loadTodaysWord();
+      // Show success message to user
       showSuccess('New word loaded!');
     } catch (error: any) {
+      // Log error for debugging
       console.error('Error getting next word:', error);
+      // Show error message to user
       showError('Failed to get new word. Please try again.');
     } finally {
+      // Always reset loading state
       setIsLoading(false);
     }
   };
