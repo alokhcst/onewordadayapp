@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from '@/components/Toast';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -66,68 +67,25 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
         />
       ))}
       {confirmData && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10000,
-          }}
-          onClick={() => handleConfirm(false)}
-        >
-          <div
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: 12,
-              padding: 24,
-              maxWidth: 400,
-              margin: 20,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p style={{ fontSize: 16, color: '#333', marginBottom: 24 }}>{confirmData.message}</p>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button
-                onClick={() => handleConfirm(false)}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: 8,
-                  border: '1px solid #ddd',
-                  backgroundColor: '#f5f5f5',
-                  color: '#666',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmCard}>
+            <Text style={styles.confirmMessage}>{confirmData.message}</Text>
+            <View style={styles.confirmButtons}>
+              <TouchableOpacity
+                onPress={() => handleConfirm(false)}
+                style={[styles.confirmButton, styles.confirmCancelButton]}
               >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleConfirm(true)}
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  borderRadius: 8,
-                  border: 'none',
-                  backgroundColor: '#4A90E2',
-                  color: '#fff',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
+                <Text style={styles.confirmCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleConfirm(true)}
+                style={[styles.confirmButton, styles.confirmConfirmButton]}
               >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
+                <Text style={styles.confirmConfirmText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       )}
     </ToastContext.Provider>
   );
@@ -140,4 +98,59 @@ export const useToast = () => {
   }
   return context;
 };
+
+const styles = StyleSheet.create({
+  confirmOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10000,
+  },
+  confirmCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    maxWidth: 400,
+    width: '90%',
+  },
+  confirmMessage: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 24,
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  confirmButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmCancelButton: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#f5f5f5',
+  },
+  confirmCancelText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  confirmConfirmButton: {
+    backgroundColor: '#4A90E2',
+  },
+  confirmConfirmText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 

@@ -4,7 +4,7 @@ import { api } from '@/lib/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -359,49 +359,79 @@ export default function ProfileScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Age Group</Text>
                 <View style={styles.pickerContainer}>
-                  <select
-                    style={webStyles.select as any}
-                    value={editedAgeGroup}
-                    onChange={(e) => setEditedAgeGroup(e.target.value)}
-                  >
-                    <option value="">Select age group</option>
-                    <option value="school">School (6-18)</option>
-                    <option value="college">College (18-24)</option>
-                    <option value="adult">Adult (25+)</option>
-                  </select>
+                  {Platform.OS === 'web' ? (
+                    <select
+                      style={webStyles.select as any}
+                      value={editedAgeGroup}
+                      onChange={(e) => setEditedAgeGroup(e.target.value)}
+                    >
+                      <option value="">Select age group</option>
+                      <option value="school">School (6-18)</option>
+                      <option value="college">College (18-24)</option>
+                      <option value="adult">Adult (25+)</option>
+                    </select>
+                  ) : (
+                    <TextInput
+                      style={styles.input}
+                      value={editedAgeGroup}
+                      onChangeText={setEditedAgeGroup}
+                      placeholder="school | college | adult"
+                      autoCapitalize="none"
+                    />
+                  )}
                 </View>
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Context</Text>
                 <View style={styles.pickerContainer}>
-                  <select
-                    style={webStyles.select as any}
-                    value={editedContext}
-                    onChange={(e) => setEditedContext(e.target.value)}
-                  >
-                    <option value="">Select context</option>
-                    <option value="academic">Academic</option>
-                    <option value="professional">Professional</option>
-                    <option value="personal">Personal</option>
-                  </select>
+                  {Platform.OS === 'web' ? (
+                    <select
+                      style={webStyles.select as any}
+                      value={editedContext}
+                      onChange={(e) => setEditedContext(e.target.value)}
+                    >
+                      <option value="">Select context</option>
+                      <option value="academic">Academic</option>
+                      <option value="professional">Professional</option>
+                      <option value="personal">Personal</option>
+                    </select>
+                  ) : (
+                    <TextInput
+                      style={styles.input}
+                      value={editedContext}
+                      onChangeText={setEditedContext}
+                      placeholder="academic | professional | personal"
+                      autoCapitalize="none"
+                    />
+                  )}
                 </View>
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Exam Prep (Optional)</Text>
                 <View style={styles.pickerContainer}>
-                  <select
-                    style={webStyles.select as any}
-                    value={editedExamPrep}
-                    onChange={(e) => setEditedExamPrep(e.target.value)}
-                  >
-                    <option value="">None</option>
-                    <option value="gre">GRE</option>
-                    <option value="sat">SAT</option>
-                    <option value="toefl">TOEFL</option>
-                    <option value="ielts">IELTS</option>
-                  </select>
+                  {Platform.OS === 'web' ? (
+                    <select
+                      style={webStyles.select as any}
+                      value={editedExamPrep}
+                      onChange={(e) => setEditedExamPrep(e.target.value)}
+                    >
+                      <option value="">None</option>
+                      <option value="gre">GRE</option>
+                      <option value="sat">SAT</option>
+                      <option value="toefl">TOEFL</option>
+                      <option value="ielts">IELTS</option>
+                    </select>
+                  ) : (
+                    <TextInput
+                      style={styles.input}
+                      value={editedExamPrep}
+                      onChangeText={setEditedExamPrep}
+                      placeholder="none | gre | sat | toefl | ielts"
+                      autoCapitalize="none"
+                    />
+                  )}
                 </View>
               </View>
 
