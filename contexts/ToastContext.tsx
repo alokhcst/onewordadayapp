@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from '@/components/Toast';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -67,8 +67,8 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
         />
       ))}
       {confirmData && (
-        <View style={styles.confirmOverlay}>
-          <View style={styles.confirmCard}>
+        <Pressable style={styles.confirmOverlay} onPress={() => handleConfirm(false)}>
+          <Pressable style={styles.confirmCard} onPress={() => {}}>
             <Text style={styles.confirmMessage}>{confirmData.message}</Text>
             <View style={styles.confirmButtons}>
               <TouchableOpacity
@@ -84,8 +84,8 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
                 <Text style={styles.confirmConfirmText}>Confirm</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       )}
     </ToastContext.Provider>
   );

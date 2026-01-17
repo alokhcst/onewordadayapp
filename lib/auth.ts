@@ -34,10 +34,34 @@ const getSignInUserMessage = (error: any) => {
     return 'Invalid sign-in request. Please check your email and try again.';
   }
   if (name === 'Unknown') {
-    return 'Sign-in failed due to configuration or service error. Please try again later.';
+    const issues = getAuthConfigIssues();
+    if (issues.length > 0) {
+      return `Sign-in failed: ${issues.join(' ')}`;
+    }
+    return 'Sign-in failed. Please verify your Cognito User Pool ID and App Client ID.';
   }
 
   return 'Unable to sign in. Please try again.';
+};
+
+const getAuthConfigIssues = () => {
+  const issues: string[] = [];
+  const userPoolId = process.env.EXPO_PUBLIC_USER_POOL_ID;
+  const clientId = process.env.EXPO_PUBLIC_USER_POOL_CLIENT_ID;
+
+  if (!userPoolId || userPoolId === 'YOUR_USER_POOL_ID') {
+    issues.push('Cognito User Pool ID is not configured (EXPO_PUBLIC_USER_POOL_ID).');
+  } else if (!/^[a-z]{2}-[a-z]+-\d_[A-Za-z0-9]+$/.test(userPoolId)) {
+    issues.push('Cognito User Pool ID format looks invalid.');
+  }
+
+  if (!clientId || clientId === 'YOUR_CLIENT_ID') {
+    issues.push('Cognito Client ID is not configured (EXPO_PUBLIC_USER_POOL_CLIENT_ID).');
+  } else if (!/^[A-Za-z0-9]+$/.test(clientId) || clientId.length < 10) {
+    issues.push('Cognito Client ID format looks invalid.');
+  }
+
+  return issues;
 };
 
 export interface SignUpParams {
@@ -233,6 +257,12 @@ export const authSignIn = async ({ email, password }: SignInParams) => {
       }
     } catch (checkError) {
       console.log('  - No existing session found');
+    }
+
+    const configIssues = getAuthConfigIssues();
+    if (configIssues.length > 0) {
+      console.log('  - ERROR: Cognito configuration issues:', configIssues);
+      throw new Error(`Sign-in failed: ${configIssues.join(' ')}`);
     }
 
     console.log('  - Calling Cognito signIn...');
