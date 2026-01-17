@@ -1,6 +1,45 @@
 import { signIn as amplifySignIn, confirmSignUp, fetchAuthSession, fetchUserAttributes, getCurrentUser, resendSignUpCode, signInWithRedirect, signOut, signUp } from 'aws-amplify/auth';
 import * as SecureStore from 'expo-secure-store';
 
+const getAuthErrorDetails = (error: any) => ({
+  name: error?.name || 'Unknown',
+  message: error?.message || 'Unknown error',
+  code: error?.code,
+  status: error?.$metadata?.httpStatusCode,
+});
+
+const getSignInUserMessage = (error: any) => {
+  const { name, message, status } = getAuthErrorDetails(error);
+  const normalized = `${name} ${message}`.toLowerCase();
+
+  if (normalized.includes('usernotfound') || normalized.includes('user does not exist')) {
+    return 'No account found for this email. Please sign up first.';
+  }
+  if (normalized.includes('notauthorized') || normalized.includes('incorrect username or password')) {
+    return 'Incorrect email or password. Please try again.';
+  }
+  if (normalized.includes('usernotconfirmed') || normalized.includes('user is not confirmed')) {
+    return 'Your email is not verified yet. Please confirm your account.';
+  }
+  if (normalized.includes('passwordresetrequired')) {
+    return 'Password reset required. Please reset your password.';
+  }
+  if (normalized.includes('limitexceeded') || normalized.includes('too many') || status === 429) {
+    return 'Too many attempts. Please wait a bit and try again.';
+  }
+  if (normalized.includes('network') || normalized.includes('timeout')) {
+    return 'Network error. Please check your connection and try again.';
+  }
+  if (normalized.includes('invalidparameter')) {
+    return 'Invalid sign-in request. Please check your email and try again.';
+  }
+  if (name === 'Unknown') {
+    return 'Sign-in failed due to configuration or service error. Please try again later.';
+  }
+
+  return 'Unable to sign in. Please try again.';
+};
+
 export interface SignUpParams {
   email: string;
   password: string;
@@ -228,13 +267,20 @@ export const authSignIn = async ({ email, password }: SignInParams) => {
     };
   } catch (error: any) {
     console.log('  - ERROR in authSignIn:');
-    console.error('    * Error name:', error.name);
-    console.error('    * Error message:', error.message);
+    const details = getAuthErrorDetails(error);
+    console.error('    * Error name:', details.name);
+    console.error('    * Error message:', details.message);
+    if (details.code) {
+      console.error('    * Error code:', details.code);
+    }
+    if (details.status) {
+      console.error('    * HTTP status:', details.status);
+    }
     
     // If error is about already signed in user, treat as success
-    if (error.message?.includes('already a signed in user') || 
-        error.message?.includes('already signed in') ||
-        error.name === 'UserAlreadyAuthenticatedException') {
+    if (details.message?.includes('already a signed in user') || 
+        details.message?.includes('already signed in') ||
+        details.name === 'UserAlreadyAuthenticatedException') {
       console.log('    * User already authenticated - treating as success');
       console.log('========================================\n');
       return {
@@ -246,7 +292,7 @@ export const authSignIn = async ({ email, password }: SignInParams) => {
     
     console.error('    * Full error:', error);
     console.log('========================================\n');
-    throw new Error(error.message || 'Failed to sign in');
+    throw new Error(getSignInUserMessage(error));
   }
 };
 
