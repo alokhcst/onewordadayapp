@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from '@/components/Toast';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -101,7 +101,7 @@ export const useToast = () => {
 
 const styles = StyleSheet.create({
   confirmOverlay: {
-    position: 'absolute',
+    position: Platform.OS === 'web' ? 'fixed' : 'absolute',
     top: 0,
     left: 0,
     right: 0,

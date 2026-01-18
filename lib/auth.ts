@@ -51,7 +51,7 @@ const getAuthConfigIssues = () => {
 
   if (!userPoolId || userPoolId === 'YOUR_USER_POOL_ID') {
     issues.push('Cognito User Pool ID is not configured (EXPO_PUBLIC_USER_POOL_ID).');
-  } else if (!/^[a-z]{2}-[a-z]+-\d_[A-Za-z0-9]+$/.test(userPoolId)) {
+  } else if (!/^[a-z]{2}-[a-z]+-\d+_[A-Za-z0-9]+$/.test(userPoolId)) {
     issues.push('Cognito User Pool ID format looks invalid.');
   }
 
