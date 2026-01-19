@@ -37,11 +37,11 @@ graph TB
 
     subgraph "AWS API Gateway"
         C[REST API Endpoint]
-        C1[/word/today - GET]
-        C2[/user/profile - GET]
-        C3[/user/profile - PUT]
-        C4[/feedback - POST]
-        C5[/history - GET]
+        C1["/word/today - GET"]
+        C2["/user/profile - GET"]
+        C3["/user/profile - PUT"]
+        C4["/feedback - POST"]
+        C5["/history - GET"]
     end
 
     subgraph "AWS Lambda Functions"
@@ -202,7 +202,7 @@ flowchart TD
     CheckPlatform -->|Web| WebNotif[Skip Notifications<br/>channels: empty array]
     CheckPlatform -->|Native| NativeNotif[Request Push Permission<br/>Get Expo Push Token]
     
-    WebNotif & NativeNotif --> SaveProfile[PUT /user/profile]
+    WebNotif & NativeNotif --> SaveProfile["PUT /user/profile"]
     SaveProfile --> Lambda[user-preferences Lambda]
     Lambda --> ExtractClaims[Extract Cognito Claims<br/>userId, email, name]
     Lambda --> CreateProfile[Create Default Profile in DB]
@@ -289,7 +289,7 @@ flowchart TD
     Start([User Opens Profile Screen]) --> LoadProfile[Load Profile]
     
     LoadProfile --> GetAuthUser[Get Auth User from Context]
-    GetAuthUser --> APICall[GET /user/profile with JWT]
+    GetAuthUser --> APICall["GET /user/profile with JWT"]
     
     APICall --> Lambda[user-preferences Lambda]
     Lambda --> ExtractClaims[Extract Cognito Claims<br/>userId, email, name]
@@ -317,7 +317,7 @@ flowchart TD
     ReturnNew & ReturnExisting --> DisplayProfile[Display on Profile Screen]
     
     DisplayProfile --> UserEdit[User Edits Profile]
-    UserEdit --> UpdateAPI[PUT /user/profile]
+    UserEdit --> UpdateAPI["PUT /user/profile"]
     UpdateAPI --> UpdateLambda[user-preferences Lambda]
     UpdateLambda --> ValidateData[Validate & merge data<br/>Cognito claims > Body > Existing]
     ValidateData --> SaveUpdate[Save updated profile]
@@ -355,11 +355,11 @@ graph LR
     end
 
     subgraph "API Gateway Routes"
-        R1[GET /word/today]
-        R2[GET /user/profile]
-        R3[PUT /user/profile]
-        R4[POST /feedback]
-        R5[GET /history]
+        R1["GET /word/today"]
+        R2["GET /user/profile"]
+        R3["PUT /user/profile"]
+        R4["POST /feedback"]
+        R5["GET /history"]
     end
 
     subgraph "DynamoDB Tables"
