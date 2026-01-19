@@ -1202,6 +1202,18 @@ aws dynamodb get-item --table-name onewordaday-production-daily-words --key '{"u
 | **[DEPLOYMENT_GUIDE.md](./documents/DEPLOYMENT_GUIDE.md)** | Step-by-step deployment |
 | **scripts/README.md** | Deployment script reference |
 
+### Repository Layout (DevOps-Ready)
+
+| Area | Location | Notes |
+|------|----------|-------|
+| App (Expo Web + Mobile) | `./` | Current app lives at repo root |
+| Docs | `docs/` | Entry point (docs currently in `documents/`) |
+| Ops scripts | `ops/` | Entry point (scripts in `scripts/`) |
+| Infrastructure | `infra/` | Entry point (Terraform in `terraform/`) |
+| Backend services | `services/` | Entry point (backend in `backend/`) |
+| Test data | `testdata/` | Sample payloads and responses |
+| CI workflows | `.github/workflows/` | Lint + build pipelines |
+
 ### Quick Links
 
 - [Architecture Diagrams](./documents/ARCHITECTURE_FLOW_DIAGRAM.md)

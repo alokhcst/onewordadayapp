@@ -1,0 +1,43 @@
+name: Build Packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx expo export --platform web
+
+  build-android:
+    runs-on: ubuntu-latest
+    env:
+      EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx eas build --platform android --non-interactive
+
+  build-ios:
+    runs-on: macos-latest
+    env:
+      EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx eas build --platform ios --non-interactive
+
