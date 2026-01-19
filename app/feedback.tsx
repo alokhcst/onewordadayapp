@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { api } from '@/lib/api';
+import { getMembershipBadge } from '@/lib/points';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const RATINGS = [1, 2, 3, 4, 5];
 const DIFFICULTIES = [
@@ -19,7 +20,7 @@ export default function FeedbackScreen() {
   const [rating, setRating] = useState(0);
   const [practiced, setPracticed] = useState(false);
   const [encountered, setEncountered] = useState(false);
-  const [difficulty, setDifficulty] = useState('appropriate');
+  const [difficulty, setDifficulty] = useState<'too_easy' | 'appropriate' | 'too_difficult'>('appropriate');
   const [additionalContext, setAdditionalContext] = useState('');
   const [comments, setComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,7 +49,16 @@ export default function FeedbackScreen() {
       });
       
       console.log('Feedback submitted successfully:', result);
-      showSuccess('Thank you! Your feedback helps us personalize your learning experience.');
+      const reward = result?.reward;
+      if (reward?.pointsAdded) {
+        showSuccess(`Feedback received! +${reward.pointsAdded} points`);
+      } else {
+        showSuccess('Feedback received! Thanks for sharing.');
+      }
+      if (reward?.levelChanged) {
+        const badge = getMembershipBadge(reward.newLevel);
+        showSuccess(`Congratulations! You're now a ${badge.label}.`);
+      }
       setTimeout(() => router.back(), 1500);
     } catch (error: any) {
       console.error('Error submitting feedback:', error);

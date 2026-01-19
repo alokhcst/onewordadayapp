@@ -103,6 +103,8 @@ export const api = {
     ageGroup?: string;
     context?: string;
     examPrep?: string;
+    pointsTotal?: number;
+    membershipLevel?: string;
     expoPushToken?: string;
     notificationPreferences?: {
       dailyWord?: {

@@ -1,5 +1,7 @@
+import { getEnv } from '@/lib/env';
 import { signIn as amplifySignIn, confirmSignUp, fetchAuthSession, fetchUserAttributes, getCurrentUser, resendSignUpCode, signInWithRedirect, signOut, signUp } from 'aws-amplify/auth';
 import * as SecureStore from 'expo-secure-store';
+import { NativeModules, Platform } from 'react-native';
 
 const getAuthErrorDetails = (error: any) => ({
   name: error?.name || 'Unknown',
@@ -46,8 +48,18 @@ const getSignInUserMessage = (error: any) => {
 
 const getAuthConfigIssues = () => {
   const issues: string[] = [];
-  const userPoolId = process.env.EXPO_PUBLIC_USER_POOL_ID;
-  const clientId = process.env.EXPO_PUBLIC_USER_POOL_CLIENT_ID;
+  const userPoolId = getEnv('EXPO_PUBLIC_USER_POOL_ID');
+  const clientId = getEnv('EXPO_PUBLIC_USER_POOL_CLIENT_ID');
+  const maskValue = (value?: string) => {
+    if (!value) return 'missing';
+    if (value.length <= 8) return `${value} (len ${value.length})`;
+    return `${value.slice(0, 4)}...${value.slice(-4)} (len ${value.length})`;
+  };
+
+  console.log('[Auth] Resolved config:', {
+    userPoolId: maskValue(userPoolId),
+    clientId: maskValue(clientId),
+  });
 
   if (!userPoolId || userPoolId === 'YOUR_USER_POOL_ID') {
     issues.push('Cognito User Pool ID is not configured (EXPO_PUBLIC_USER_POOL_ID).');
@@ -214,6 +226,9 @@ export const signInWithGoogle = async () => {
   console.log('  - Initiating Google OAuth redirect...');
   
   try {
+    if (Platform.OS !== 'web' && !NativeModules.AmplifyRTNWebBrowser) {
+      throw new Error('Google sign-in requires a development build (Expo Go does not support the native web browser module).');
+    }
     await signInWithRedirect({ provider: 'Google' });
     console.log('  - Redirect initiated');
     console.log('========================================\n');
@@ -270,6 +285,7 @@ export const authSignIn = async ({ email, password }: SignInParams) => {
     const { isSignedIn, nextStep } = await amplifySignIn({
       username: email,
       password,
+      options: Platform.OS === 'web' ? undefined : { authFlowType: 'USER_PASSWORD_AUTH' },
     });
 
     console.log('  - Sign in response:');

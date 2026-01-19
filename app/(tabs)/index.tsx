@@ -1,5 +1,6 @@
 // Import useToast hook to show success/error messages and confirmation dialogs
 import { useToast } from '@/contexts/ToastContext';
+import { getMembershipBadge } from '@/lib/points';
 // Import API client to make HTTP requests to backend
 import { api } from '@/lib/api';
 // Import Ionicons for icon components (volume, chat, arrow icons)
@@ -99,7 +100,7 @@ export default function TodayScreen() {
       setIsLoading(true);
       // Mark current word as skipped by submitting feedback
       // This tells the backend the user wants to skip this word
-      await api.submitFeedback({
+      const result = await api.submitFeedback({
         wordId: word.wordId, // ID of word being skipped
         date: word.date, // Date of the word
         rating: 0, // No rating (skipped)
@@ -108,11 +109,19 @@ export default function TodayScreen() {
         difficulty: undefined, // No difficulty rating
         comments: 'Skipped to next word', // Comment explaining the action
       });
-      
+      const reward = result?.reward;
+      if (reward?.levelChanged) {
+        const badge = getMembershipBadge(reward.newLevel);
+        showSuccess(`Congratulations! You're now a ${badge.label}.`);
+      }
       // Reload word from API - backend should generate a new word since current was skipped
       await loadTodaysWord();
       // Show success message to user
-      showSuccess('New word loaded!');
+      if (reward?.pointsAdded) {
+        showSuccess(`New word loaded! +${reward.pointsAdded} points`);
+      } else {
+        showSuccess('New word loaded!');
+      }
     } catch (error: any) {
       // Log error for debugging
       console.error('Error getting next word:', error);

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Platform, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { api } from '@/lib/api';
+import { getMembershipBadge } from '@/lib/points';
+import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 type FilterType = 'all' | 'practiced' | 'viewed' | 'skipped';
 
@@ -111,7 +112,7 @@ export default function HistoryScreen() {
     }
 
     try {
-      await api.submitFeedback({
+      const result = await api.submitFeedback({
         wordId: item.wordId || item.word,
         date: item.date,
         rating: feedback.rating,
@@ -121,7 +122,16 @@ export default function HistoryScreen() {
         comments: feedback.comments,
       });
 
-      showSuccess('Feedback saved!');
+      const reward = result?.reward;
+      if (reward?.pointsAdded) {
+        showSuccess(`Feedback saved! +${reward.pointsAdded} points`);
+      } else {
+        showSuccess('Feedback saved!');
+      }
+      if (reward?.levelChanged) {
+        const badge = getMembershipBadge(reward.newLevel);
+        showSuccess(`Congratulations! You're now a ${badge.label}.`);
+      }
       
       // Update the word in the list
       const updatedWords = allWords.map(w => 

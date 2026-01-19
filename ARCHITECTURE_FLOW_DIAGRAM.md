@@ -1,5 +1,7 @@
 # One Word A Day - Architecture & Process Flow Diagram
 
+
+
 ## Table of Contents
 1. [Complete System Architecture](#complete-system-architecture)
 2. [Authentication Flow](#authentication-flow)
@@ -211,7 +213,7 @@ flowchart TD
 
 ---
 
-## Daily Word Flow
+## Daily Word Flow (With Points & Membership)
 
 ```mermaid
 sequenceDiagram
@@ -219,57 +221,63 @@ sequenceDiagram
     participant TS as Today Screen
     participant API as API Gateway
     participant L as get-todays-word Lambda
-    participant DB as DynamoDB Words
+    participant FP as feedback-processor Lambda
+    participant Users as DynamoDB Users
+    participant Words as DynamoDB Daily Words
+    participant Feedback as DynamoDB Feedback
     participant AI as Groq AI
     participant Img as Unsplash API
     participant Sec as Secrets Manager
 
-    U->>TS: Open Today Tab
-    TS->>TS: Load cached user profile
-    TS->>API: GET /word/today (with JWT)
-    API->>L: Invoke Lambda with Cognito claims
+    U->>TS: 1. Open Today Tab
+    TS->>TS: 2. Load cached user profile
+    TS->>API: 3. GET /word/today (with JWT)
+    API->>L: 4. Invoke Lambda with Cognito claims
     
-    L->>L: Extract userId from claims
-    L->>DB: Query today's word for user
+    L->>L: 5. Extract userId from claims
+    L->>Words: 6. Query today's word for user
     
     alt Word exists for today
-        DB-->>L: Return word + progress
-        L->>L: Check if image exists
+        Words-->>L: 7a. Return word + progress
+        L->>L: 8a. Check if image exists
         alt No image URL
-            L->>Sec: Get Unsplash API key
-            Sec-->>L: API key
-            L->>Img: Search for word image
-            Img-->>L: Image URL
-            L->>DB: Update word with imageUrl
+            L->>Sec: 9a. Get Unsplash API key
+            Sec-->>L: 10a. API key
+            L->>Img: 11a. Search for word image
+            Img-->>L: 12a. Image URL
+            L->>Words: 13a. Update word with imageUrl
         end
-        L-->>API: Return word data
+        L-->>API: 14a. Return word data
     else No word for today
-        L->>L: Check user preferences
-        L->>Sec: Get Groq API key
-        Sec-->>L: API key
-        L->>AI: Generate word based on context
-        AI-->>L: Word + definition + examples
-        L->>Sec: Get Unsplash API key
-        Sec-->>L: API key
-        L->>Img: Search for word image
-        Img-->>L: Image URL
-        L->>DB: Store new word
-        DB-->>L: Success
-        L-->>API: Return new word
+        L->>L: 7b. Check user preferences
+        L->>Sec: 8b. Get Groq API key
+        Sec-->>L: 9b. API key
+        L->>AI: 10b. Generate word based on context
+        AI-->>L: 11b. Word + definition + examples
+        L->>Sec: 12b. Get Unsplash API key
+        Sec-->>L: 13b. API key
+        L->>Img: 14b. Search for word image
+        Img-->>L: 15b. Image URL
+        L->>Words: 16b. Store new word
+        Words-->>L: 17b. Success
+        L-->>API: 18b. Return new word
     end
     
-    API-->>TS: Word data with image
-    TS->>TS: Display word, definition, image
-    TS->>TS: Show practice buttons
+    API-->>TS: 15. Word data with image
+    TS->>TS: 16. Display word, definition, image
+    TS->>TS: 17. Show practice buttons
     
-    U->>TS: Mark as "Easy/Medium/Hard"
-    TS->>API: POST /feedback
-    API->>L: submit-feedback Lambda
-    L->>DB: Update word practice status
-    DB-->>L: Success
-    L-->>API: Feedback recorded
-    API-->>TS: Success
-    TS->>TS: Update UI
+    U->>TS: 18. Mark as "Easy/Medium/Hard"
+    TS->>API: 19. POST /feedback
+    API->>FP: 20. feedback-processor Lambda
+    FP->>Feedback: 21. Store feedback entry
+    FP->>Words: 22. Update word practice status
+    FP->>Users: 23. Increment pointsTotal (+1000)
+    FP->>Users: 24. Recompute membershipLevel (Silver/Gold/Platinum/Diamond)
+    Users-->>FP: 25. Updated points + membership
+    FP-->>API: 26. Return reward {pointsAdded, pointsTotal, levelChanged, membershipLevel}
+    API-->>TS: 27. Reward payload
+    TS->>TS: 28. Show toast for points + membership badge update
 ```
 
 ---

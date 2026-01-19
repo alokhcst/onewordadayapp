@@ -7,6 +7,20 @@ const docClient = DynamoDBDocumentClient.from(ddbClient);
 
 const USERS_TABLE = process.env.USERS_TABLE;
 const FEEDBACK_TABLE = process.env.FEEDBACK_TABLE;
+const POINTS_PER_FEEDBACK = 1000;
+
+const MEMBERSHIP_THRESHOLDS = [
+  { level: 'diamond', minPoints: 100000 },
+  { level: 'platinum', minPoints: 75000 },
+  { level: 'gold', minPoints: 50000 },
+  { level: 'silver', minPoints: 25000 },
+  { level: 'member', minPoints: 0 }
+];
+
+const getMembershipLevel = (points) => {
+  const match = MEMBERSHIP_THRESHOLDS.find((entry) => points >= entry.minPoints);
+  return match ? match.level : 'member';
+};
 
 /**
  * Lambda handler for processing user feedback
@@ -77,6 +91,9 @@ export const handler = async (event) => {
     // Update user learning patterns
     await updateUserLearningPatterns(userId, feedbackData);
 
+    // Update user points + membership level
+    const reward = await updateUserPointsAndMembership(userId);
+
     // Update daily word practice status and rating
     await updateWordPracticeStatus(userId, date, practiced, rating);
 
@@ -89,7 +106,8 @@ export const handler = async (event) => {
       body: JSON.stringify({
         message: 'Feedback submitted successfully',
         feedbackId,
-        data: feedbackData
+        data: feedbackData,
+        reward
       })
     };
   } catch (error) {
@@ -188,6 +206,60 @@ async function updateUserLearningPatterns(userId, feedbackData) {
   } catch (error) {
     console.error('Error updating learning patterns:', error);
     // Don't throw - feedback is still recorded even if pattern update fails
+  }
+}
+
+/**
+ * Update user points and membership level
+ */
+async function updateUserPointsAndMembership(userId) {
+  try {
+    const getUserParams = {
+      TableName: USERS_TABLE,
+      Key: { userId }
+    };
+
+    const userResult = await docClient.send(new GetCommand(getUserParams));
+    const user = userResult.Item || {};
+
+    const currentPoints = user.pointsTotal || 0;
+    const previousLevel = user.membershipLevel || getMembershipLevel(currentPoints);
+    const newPoints = currentPoints + POINTS_PER_FEEDBACK;
+    const newLevel = getMembershipLevel(newPoints);
+
+    const membershipUpdatedAt = previousLevel !== newLevel
+      ? new Date().toISOString()
+      : (user.membershipUpdatedAt || null);
+
+    const updateParams = {
+      TableName: USERS_TABLE,
+      Key: { userId },
+      UpdateExpression: 'SET pointsTotal = :points, membershipLevel = :level, membershipUpdatedAt = :updatedAt',
+      ExpressionAttributeValues: {
+        ':points': newPoints,
+        ':level': newLevel,
+        ':updatedAt': membershipUpdatedAt
+      }
+    };
+
+    await docClient.send(new UpdateCommand(updateParams));
+
+    return {
+      pointsAdded: POINTS_PER_FEEDBACK,
+      pointsTotal: newPoints,
+      previousLevel,
+      newLevel,
+      levelChanged: previousLevel !== newLevel
+    };
+  } catch (error) {
+    console.error('Error updating points:', error);
+    return {
+      pointsAdded: 0,
+      pointsTotal: 0,
+      previousLevel: 'member',
+      newLevel: 'member',
+      levelChanged: false
+    };
   }
 }
 

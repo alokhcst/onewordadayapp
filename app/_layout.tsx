@@ -1,3 +1,5 @@
+import 'react-native-get-random-values';
+import '@aws-amplify/react-native';
 // Import theme providers from React Navigation - provides dark/light theme support
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 // Import Stack navigator from Expo Router - main navigation structure

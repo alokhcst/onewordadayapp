@@ -1,9 +1,11 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { api } from '@/lib/api';
+import { getMembershipBadge, getMembershipLevel, MembershipLevel } from '@/lib/points';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
@@ -22,10 +24,21 @@ export default function ProfileScreen() {
   const [editedAgeGroup, setEditedAgeGroup] = useState('');
   const [editedContext, setEditedContext] = useState('');
   const [editedExamPrep, setEditedExamPrep] = useState('');
+  const [pointsState, setPointsState] = useState<{ points: number; level: MembershipLevel }>({
+    points: 0,
+    level: 'member',
+  });
+  const membershipBadge = getMembershipBadge(pointsState.level);
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [])
+  );
 
   const loadProfile = async () => {
     console.log('========================================');
@@ -59,6 +72,14 @@ export default function ProfileScreen() {
       
       console.log('  - Setting state...');
       setProfile(response.profile);
+      if (response.profile) {
+        const pointsTotal = Number(response.profile.pointsTotal) || 0;
+        const membershipLevel = response.profile.membershipLevel || getMembershipLevel(pointsTotal);
+        setPointsState({
+          points: pointsTotal,
+          level: membershipLevel,
+        });
+      }
       
       // Use profile data, fallback to user context data
       // Priority: user.name (from Cognito attributes) > profile.name > user.username > 'User'
@@ -96,6 +117,7 @@ export default function ProfileScreen() {
       setIsLoading(false);
     }
   };
+
 
   const handleEditProfile = () => {
     setEditedName(user?.name || profile?.name || user?.username || '');
@@ -341,6 +363,23 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </>
         )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Membership</Text>
+        <View style={styles.card}>
+          <View style={styles.pointsRow}>
+            <Text style={styles.pointsLabel}>Points</Text>
+            <Text style={styles.pointsValue}>{pointsState.points.toLocaleString()}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.pointsRow}>
+            <Text style={styles.pointsLabel}>Status</Text>
+            <View style={[styles.membershipBadge, { backgroundColor: membershipBadge.color }]}>
+              <Text style={styles.membershipBadgeText}>{membershipBadge.label}</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       <View style={styles.section}>
@@ -726,6 +765,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
+  },
+  pointsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  pointsLabel: {
+    fontSize: 16,
+    color: '#666',
+  },
+  pointsValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+  membershipBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  membershipBadgeText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
   },
   infoLabel: {
     fontSize: 16,

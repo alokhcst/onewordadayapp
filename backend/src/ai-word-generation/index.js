@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { GetSecretValueCommand, SecretsManagerClient } from '@aws-sdk/client-secrets-manager';
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import axios from 'axios';
 import { randomUUID } from 'crypto';
 
@@ -57,8 +57,12 @@ export const handler = async (event) => {
     const body = event.body ? JSON.parse(event.body) : {};
     const customPrompt = body.customPrompt || null;
 
+    // Fetch recent words to avoid repeats
+    const recentWords = await getRecentGeneratedWords(userId, 30);
+    const avoidWords = new Set(recentWords.map((word) => word.toLowerCase()));
+
     // Generate word using AI
-    const wordData = await generateAIWord(user, customPrompt);
+    const wordData = await generateAIWord(user, customPrompt, avoidWords);
 
     // Store the word
     await storeGeneratedWord(wordData);
@@ -172,8 +176,8 @@ async function getUserProfile(userId) {
  * Generate word using AI with LLM router
  * Now includes image fetching
  */
-async function generateAIWord(user, customPrompt = null) {
-  const prompt = buildPrompt(user, customPrompt);
+async function generateAIWord(user, customPrompt = null, avoidWords = new Set()) {
+  const prompt = buildPrompt(user, customPrompt, avoidWords);
   
   // Get API keys from Secrets Manager
   const apiKeys = await getApiKeys();
@@ -189,28 +193,9 @@ async function generateAIWord(user, customPrompt = null) {
 
     try {
       console.log(`Attempting word generation with ${config.name}...`);
-      const wordData = await callLLM(config, apiKey, prompt);
+      const wordData = await generateUniqueWord(config, apiKey, prompt, avoidWords, apiKeys.unsplash, user);
       
       if (wordData) {
-        wordData.provider = config.name;
-        wordData.userId = user.userId;
-        wordData.date = new Date().toISOString().split('T')[0];
-        wordData.wordId = randomUUID();
-        wordData.userContext = user.context;
-        wordData.ageGroup = user.ageGroup;
-        wordData.examPrep = user.examPrep;
-        wordData.createdAt = new Date().toISOString();
-        
-        // Fetch image for the word
-        try {
-          console.log(`Fetching image for word: ${wordData.word}`);
-          const imageUrl = await fetchWordImage(wordData.word, wordData.definition, apiKeys.unsplash);
-          wordData.imageUrl = imageUrl || '';
-        } catch (imageError) {
-          console.error('Error fetching image:', imageError);
-          wordData.imageUrl = '';
-        }
-        
         return wordData;
       }
     } catch (error) {
@@ -225,7 +210,10 @@ async function generateAIWord(user, customPrompt = null) {
 /**
  * Build LLM prompt based on user context
  */
-function buildPrompt(user, customPrompt) {
+function buildPrompt(user, customPrompt, avoidWords) {
+  const avoidList = avoidWords && avoidWords.size > 0
+    ? `\nAvoid these words (already generated for this user): ${Array.from(avoidWords).slice(0, 100).join(', ')}`
+    : '';
   const basePrompt = `Generate a vocabulary word suitable for the following profile:
 
 Age Group: ${user.ageGroup}
@@ -256,9 +244,74 @@ Requirements:
 - Must be a real English word
 - Provide accurate pronunciation
 
-Return ONLY the JSON object, no additional text.`;
+Return ONLY the JSON object, no additional text.${avoidList}`;
 
   return basePrompt;
+}
+
+/**
+ * Generate a word and ensure it is not a recent duplicate
+ */
+async function generateUniqueWord(config, apiKey, prompt, avoidWords, imageApiKey, user) {
+  const maxAttempts = 5;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const wordData = await callLLM(config, apiKey, prompt);
+    if (!wordData?.word) {
+      continue;
+    }
+
+    const normalized = wordData.word.toLowerCase();
+    if (avoidWords.has(normalized)) {
+      console.log(`Duplicate word "${wordData.word}" detected, retrying...`);
+      continue;
+    }
+
+    wordData.provider = config.name;
+    wordData.userId = user.userId;
+    wordData.date = new Date().toISOString().split('T')[0];
+    wordData.wordId = randomUUID();
+    wordData.userContext = user.context;
+    wordData.ageGroup = user.ageGroup;
+    wordData.examPrep = user.examPrep;
+    wordData.createdAt = new Date().toISOString();
+
+    // Fetch image for the word
+    try {
+      console.log(`Fetching image for word: ${wordData.word}`);
+      const imageUrl = await fetchWordImage(wordData.word, wordData.definition, imageApiKey);
+      wordData.imageUrl = imageUrl || '';
+    } catch (imageError) {
+      console.error('Error fetching image:', imageError);
+      wordData.imageUrl = '';
+    }
+
+    return wordData;
+  }
+
+  return null;
+}
+
+/**
+ * Fetch recently generated words for a user
+ */
+async function getRecentGeneratedWords(userId, limit = 30) {
+  try {
+    const result = await docClient.send(new QueryCommand({
+      TableName: DAILY_WORDS_TABLE,
+      KeyConditionExpression: 'userId = :userId',
+      ExpressionAttributeValues: {
+        ':userId': userId
+      },
+      ScanIndexForward: false,
+      Limit: limit
+    }));
+
+    return (result.Items || []).map((item) => item.word).filter(Boolean);
+  } catch (error) {
+    console.error('Error fetching recent words:', error.message);
+    return [];
+  }
 }
 
 /**

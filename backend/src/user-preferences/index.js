@@ -6,6 +6,19 @@ const docClient = DynamoDBDocumentClient.from(ddbClient);
 
 const USERS_TABLE = process.env.USERS_TABLE;
 
+const MEMBERSHIP_THRESHOLDS = [
+  { level: 'diamond', minPoints: 100000 },
+  { level: 'platinum', minPoints: 75000 },
+  { level: 'gold', minPoints: 50000 },
+  { level: 'silver', minPoints: 25000 },
+  { level: 'member', minPoints: 0 }
+];
+
+const getMembershipLevel = (points) => {
+  const match = MEMBERSHIP_THRESHOLDS.find((entry) => points >= entry.minPoints);
+  return match ? match.level : 'member';
+};
+
 /**
  * Lambda handler for user preferences management
  * API: GET /user/profile, PUT /user/profile
@@ -160,6 +173,9 @@ async function getUserProfile(userId, email, name) {
         ageGroup: 'adult',
         context: 'general',
         examPrep: null,
+        pointsTotal: 0,
+        membershipLevel: 'member',
+        membershipUpdatedAt: null,
         notificationPreferences: {
           dailyWord: {
             enabled: true,
@@ -244,11 +260,17 @@ async function getUserProfile(userId, email, name) {
     console.log('  - Best name:', bestName);
     
     // Ensure profile has latest email and name from Cognito
+    const resolvedPoints = result.Item.pointsTotal ?? 0;
+    const resolvedMembershipLevel = result.Item.membershipLevel ?? getMembershipLevel(resolvedPoints);
+
     const profile = {
       ...result.Item,
       email: bestEmail,
       name: bestName,  // Display name from Cognito
-      username: bestName  // Should match display name, NOT userId
+      username: bestName,  // Should match display name, NOT userId
+      pointsTotal: resolvedPoints,
+      membershipLevel: resolvedMembershipLevel,
+      membershipUpdatedAt: result.Item.membershipUpdatedAt || null
     };
     
     console.log('  - Updated profile:');
@@ -258,7 +280,7 @@ async function getUserProfile(userId, email, name) {
     console.log('    * username (Same as name):', profile.username);
     
     // Update profile if email or name were missing
-    if (!result.Item.email || !result.Item.name) {
+    if (!result.Item.email || !result.Item.name || result.Item.pointsTotal === undefined || !result.Item.membershipLevel) {
       console.log('\nSTEP 4: Updating profile with missing Cognito data');
       console.log('  - Updating email:', email);
       console.log('  - Updating name:', name);
@@ -346,6 +368,12 @@ async function updateUserProfile(userId, email, name, requestBody) {
     console.log('  - Best name (will be used for username too):', bestName);
     
     // Prepare user data - prioritize Cognito data over body
+    const basePoints = body.pointsTotal ?? existingUser.Item?.pointsTotal ?? 0;
+    const baseMembershipLevel = body.membershipLevel ?? existingUser.Item?.membershipLevel ?? getMembershipLevel(basePoints);
+    const membershipUpdatedAt = body.membershipLevel && body.membershipLevel !== existingUser.Item?.membershipLevel
+      ? new Date().toISOString()
+      : (existingUser.Item?.membershipUpdatedAt || null);
+
     const userData = {
       userId,  // This is the unique ID (UUID)
       email: bestEmail,
@@ -354,6 +382,9 @@ async function updateUserProfile(userId, email, name, requestBody) {
       ageGroup: body.ageGroup || existingUser.Item?.ageGroup || 'adult',
       context: body.context || existingUser.Item?.context || 'general',
       examPrep: body.examPrep || existingUser.Item?.examPrep || null,
+      pointsTotal: basePoints,
+      membershipLevel: baseMembershipLevel,
+      membershipUpdatedAt,
       notificationPreferences: body.notificationPreferences || existingUser.Item?.notificationPreferences || {
         dailyWord: {
           enabled: true,

@@ -1,7 +1,7 @@
 // Import React hooks: useState for component state, useEffect for side effects
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 // Import React Native UI components for building the sign-in form
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 // Import useRouter hook from Expo Router for navigation
 import { useRouter } from 'expo-router';
 // Import useAuth hook to access authentication functions and state
@@ -86,12 +86,12 @@ export default function SignInScreen() {
 
   // Return the JSX UI for the sign-in screen
   return (
-    // KeyboardAvoidingView prevents keyboard from covering input fields
-    // Different behavior for iOS (padding) vs Android (height adjustment)
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
+      {/* KeyboardAvoidingView prevents keyboard from covering input fields */}
+      {/* Different behavior for iOS (padding) vs Android (height adjustment) */}
       {/* ScrollView allows content to scroll if keyboard takes up space */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header section with title and subtitle */}
@@ -108,12 +108,12 @@ export default function SignInScreen() {
             {/* Email text input - controlled component */}
             <TextInput
               style={styles.input}
-              value={email} // Bound to email state
-              onChangeText={setEmail} // Update state when user types
+              value={email}
+              onChangeText={setEmail}
               placeholder="your@email.com"
-              keyboardType="email-address" // Show email keyboard on mobile
-              autoCapitalize="none" // Don't auto-capitalize (emails are lowercase)
-              autoCorrect={false} // Disable autocorrect for email
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
 
@@ -123,20 +123,19 @@ export default function SignInScreen() {
             {/* Password text input - controlled component */}
             <TextInput
               style={styles.input}
-              value={password} // Bound to password state
-              onChangeText={setPassword} // Update state when user types
+              value={password}
+              onChangeText={setPassword}
               placeholder="Enter your password"
-              secureTextEntry // Hide password characters (show dots)
-              autoCapitalize="none" // Don't auto-capitalize passwords
+              secureTextEntry
+              autoCapitalize="none"
             />
           </View>
 
           {/* Sign-in button */}
           <TouchableOpacity
-            // Apply button styles, and disabled style if loading
             style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleSignIn} // Call sign-in handler when pressed
-            disabled={isLoading} // Disable button while loading
+            onPress={handleSignIn}
+            disabled={isLoading}
           >
             {/* Button text changes based on loading state */}
             <Text style={styles.buttonText}>
@@ -146,17 +145,16 @@ export default function SignInScreen() {
 
           {/* Divider between email/password and Google sign-in */}
           <View style={styles.divider}>
-            <View style={styles.dividerLine} /> {/* Left line */}
-            <Text style={styles.dividerText}>OR</Text> {/* "OR" text */}
-            <View style={styles.dividerLine} /> {/* Right line */}
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
           </View>
 
           {/* Google sign-in button */}
           <TouchableOpacity
-            // Apply Google button styles, and disabled style if loading
             style={[styles.googleButton, isGoogleLoading && styles.buttonDisabled]}
-            onPress={handleGoogleSignIn} // Call Google sign-in handler
-            disabled={isGoogleLoading} // Disable button while loading
+            onPress={handleGoogleSignIn}
+            disabled={isGoogleLoading}
           >
             {/* Button text changes based on loading state */}
             <Text style={styles.googleButtonText}>
@@ -167,11 +165,12 @@ export default function SignInScreen() {
           {/* Link to sign-up screen */}
           <TouchableOpacity
             style={styles.linkButton}
-            onPress={() => router.push('/(auth)/signup')} // Navigate to sign-up screen
+            onPress={() => router.push('/(auth)/signup')}
           >
-            <Text style={styles.linkText}>
-              Don't have an account? <Text style={styles.linkTextBold}>Sign Up</Text>
-            </Text>
+            <View style={styles.linkRow}>
+              <Text style={styles.linkText}>Don't have an account?</Text>
+              <Text style={[styles.linkText, styles.linkTextBold]}>Sign Up</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -268,6 +267,10 @@ const styles = StyleSheet.create({
   linkButton: {
     alignItems: 'center',
     marginTop: 10,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    gap: 6,
   },
   linkText: {
     fontSize: 16,
