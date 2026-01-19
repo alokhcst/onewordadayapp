@@ -60,13 +60,13 @@ $response = aws lambda invoke `
     --function-name $FUNCTION_NAME `
     --payload file://test-payload.json `
     --cli-binary-format raw-in-base64-out `
-    response.json
+    testdata/response.json
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  [OK] Function invoked successfully" -ForegroundColor Green
     
     # Read and display response
-    $responseData = Get-Content response.json | ConvertFrom-Json
+    $responseData = Get-Content testdata/response.json | ConvertFrom-Json
     
     Write-Host "`n[4/4] Response from Lambda:" -ForegroundColor Yellow
     Write-Host "  Status Code: $($responseData.statusCode)" -ForegroundColor $(if ($responseData.statusCode -eq 200) { 'Green' } else { 'Red' })
@@ -114,8 +114,8 @@ if ($LASTEXITCODE -eq 0) {
 }
 
 # Clean up test files
-if (Test-Path response.json) {
-    Remove-Item response.json
+if (Test-Path testdata/response.json) {
+    Remove-Item testdata/response.json
 }
 if (Test-Path test-payload.json) {
     Remove-Item test-payload.json

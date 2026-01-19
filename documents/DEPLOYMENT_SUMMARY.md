@@ -155,7 +155,7 @@ aws lambda list-layer-versions `
 # Test invoke
 aws lambda invoke `
   --function-name onewordaday-production-get-todays-word `
-  response.json
+  testdata/response.json
 ```
 
 ## 📊 Expected Build Output

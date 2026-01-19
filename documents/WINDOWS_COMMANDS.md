@@ -141,9 +141,9 @@ npx expo start --ios
 aws lambda invoke `
   --function-name onewordaday-production-word-generation `
   --payload '{}' `
-  response.json
+  testdata/response.json
 
-Get-Content response.json | ConvertFrom-Json
+Get-Content testdata/response.json | ConvertFrom-Json
 ```
 
 ### View Lambda Logs

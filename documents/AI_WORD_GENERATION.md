@@ -102,7 +102,7 @@ aws lambda get-function \
 aws lambda invoke \
   --function-name onewordaday-production-ai-word-generation \
   --payload '{"userId":"test-user"}' \
-  response.json
+  testdata/response.json
 ```
 
 ## Usage

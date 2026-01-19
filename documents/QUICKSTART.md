@@ -146,10 +146,10 @@ The word generation runs daily at midnight UTC. To test immediately:
 aws lambda invoke `
   --function-name onewordaday-production-word-generation `
   --payload '{}' `
-  response.json
+  testdata/response.json
 
 # Check response
-Get-Content response.json
+Get-Content testdata/response.json
 ```
 
 ### API Errors (401/403)?

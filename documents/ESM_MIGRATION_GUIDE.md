@@ -242,9 +242,9 @@ After deployment, invoke a Lambda directly:
 aws lambda invoke \
   --function-name onewordaday-production-get-todays-word \
   --payload '{"requestContext":{"authorizer":{"claims":{"sub":"test-user"}}}}' \
-  response.json
+  testdata/response.json
 
-cat response.json
+cat testdata/response.json
 ```
 
 ## Rollback Plan

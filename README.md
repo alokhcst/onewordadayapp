@@ -1174,7 +1174,7 @@ nslookup onewordaday-production.auth.us-east-1.amazoncognito.com
 aws lambda get-function --function-name onewordaday-production-get-todays-word
 
 # Test Lambda directly
-aws lambda invoke --function-name onewordaday-production-get-todays-word --payload file://test-payload.json response.json
+aws lambda invoke --function-name onewordaday-production-get-todays-word --payload file://test-payload.json testdata/response.json
 
 # Check API Gateway integration
 aws apigateway get-integration --rest-api-id 48jp6br6h2 --resource-id RESOURCE_ID --http-method GET
@@ -1192,22 +1192,22 @@ aws dynamodb get-item --table-name onewordaday-production-daily-words --key '{"u
 | Document | Description |
 |----------|-------------|
 | **README.md** | This file - complete overview |
-| **ARCHITECTURE_FLOW_DIAGRAM.md** | Detailed system diagrams |
-| **BACKEND_ERROR_HANDLING_IMPROVEMENTS.md** | Error handling enhancements |
-| **GOOGLE_OAUTH_SETUP.md** | Google OAuth configuration guide |
-| **HISTORY_FEATURE_ENHANCEMENT.md** | Inline feedback feature |
-| **TERRAFORM_FIXES_SUMMARY.md** | Infrastructure fixes |
-| **GITIGNORE_GUIDE.md** | Version control configuration |
-| **USER_NAME_DISPLAY_FIX.md** | Username display debugging |
-| **DEPLOYMENT_GUIDE.md** | Step-by-step deployment |
+| **[ARCHITECTURE_FLOW_DIAGRAM.md](./documents/ARCHITECTURE_FLOW_DIAGRAM.md)** | Detailed system diagrams |
+| **[BACKEND_ERROR_HANDLING_IMPROVEMENTS.md](./documents/BACKEND_ERROR_HANDLING_IMPROVEMENTS.md)** | Error handling enhancements |
+| **[GOOGLE_OAUTH_SETUP.md](./documents/GOOGLE_OAUTH_SETUP.md)** | Google OAuth configuration guide |
+| **[HISTORY_FEATURE_ENHANCEMENT.md](./documents/HISTORY_FEATURE_ENHANCEMENT.md)** | Inline feedback feature |
+| **[TERRAFORM_FIXES_SUMMARY.md](./documents/TERRAFORM_FIXES_SUMMARY.md)** | Infrastructure fixes |
+| **[GITIGNORE_GUIDE.md](./documents/GITIGNORE_GUIDE.md)** | Version control configuration |
+| **[USER_NAME_DISPLAY_FIX.md](./documents/USER_NAME_DISPLAY_FIX.md)** | Username display debugging |
+| **[DEPLOYMENT_GUIDE.md](./documents/DEPLOYMENT_GUIDE.md)** | Step-by-step deployment |
 | **scripts/README.md** | Deployment script reference |
 
 ### Quick Links
 
-- [Architecture Diagrams](./ARCHITECTURE_FLOW_DIAGRAM.md)
-- [Google OAuth Setup](./GOOGLE_OAUTH_SETUP.md)
+- [Architecture Diagrams](./documents/ARCHITECTURE_FLOW_DIAGRAM.md)
+- [Google OAuth Setup](./documents/GOOGLE_OAUTH_SETUP.md)
 - [Deployment Script Guide](./scripts/README.md)
-- [History Feature Guide](./HISTORY_FEATURE_ENHANCEMENT.md)
+- [History Feature Guide](./documents/HISTORY_FEATURE_ENHANCEMENT.md)
 
 ---
 

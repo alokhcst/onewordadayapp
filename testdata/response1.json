@@ -1,0 +1,1 @@
+{"statusCode":500,"headers":{"Access-Control-Allow-Origin":"*","Content-Type":"application/json"},"body":"{\"message\":\"Error generating word\",\"error\":\"All LLM providers failed. Please try again later.\"}"}

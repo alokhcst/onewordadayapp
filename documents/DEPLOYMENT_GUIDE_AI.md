@@ -96,10 +96,10 @@ aws lambda invoke \
   --function-name onewordaday-production-ai-word-generation \
   --payload file://test-payload.json \
   --region us-east-1 \
-  response.json
+  testdata/response.json
 
 # View response
-cat response.json | jq
+cat testdata/response.json | jq
 ```
 
 ### Expected Response

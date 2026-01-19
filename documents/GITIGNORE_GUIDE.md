@@ -56,8 +56,8 @@ lambda-*.zip
 test-*.json
 *-response.json
 *-payload.json
-update-word.json
-today-word.json
+testdata/update-word.json
+testdata/today-word.json
 debug-*.json
 mock-*.json
 *.tmp

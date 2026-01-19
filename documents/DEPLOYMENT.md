@@ -286,9 +286,9 @@ curl -H "Authorization: Bearer $ID_TOKEN" \
 aws lambda invoke \
   --function-name onewordaday-dev-word-generation \
   --payload '{}' \
-  response.json
+  testdata/response.json
 
-cat response.json
+cat testdata/response.json
 ```
 
 ### 4. Check EventBridge Rules
