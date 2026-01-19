@@ -26,7 +26,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx eas-cli init --non-interactive
+      - run: npx eas-cli init --non-interactive --force
       - run: npx eas-cli build --platform android --non-interactive
 
   build-ios:
@@ -40,6 +40,6 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx eas-cli init --non-interactive
+      - run: npx eas-cli init --non-interactive --force
       - run: npx eas-cli build --platform ios --non-interactive
 
