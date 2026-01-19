@@ -155,7 +155,6 @@ export default function HistoryScreen() {
   const renderWordItem = ({ item }: { item: any }) => {
     const isPracticed = item.practiceStatus === 'practiced' || item.practiced === true;
     const isSkipped = item.practiceStatus === 'skipped';
-    const isViewed = !isPracticed && !isSkipped;
     const wordKey = `${item.date}-${item.word}`;
     const isExpanded = expandedWordId === wordKey;
     const currentFeedback = feedbackData[wordKey] || {

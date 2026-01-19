@@ -168,7 +168,7 @@ export default function SignInScreen() {
             onPress={() => router.push('/(auth)/signup')}
           >
             <View style={styles.linkRow}>
-              <Text style={styles.linkText}>Don't have an account?</Text>
+              <Text style={styles.linkText}>Don&apos;t have an account?</Text>
               <Text style={[styles.linkText, styles.linkTextBold]}>Sign Up</Text>
             </View>
           </TouchableOpacity>

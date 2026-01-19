@@ -80,7 +80,7 @@ export default function FeedbackScreen() {
       />
       <ScrollView style={styles.container}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>How would you rate today's word?</Text>
+          <Text style={styles.sectionTitle}>How would you rate today&apos;s word?</Text>
           <View style={styles.ratingContainer}>
             {RATINGS.map((star) => (
               <TouchableOpacity

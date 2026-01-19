@@ -119,7 +119,7 @@ export default function OnboardingScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>What's your age group?</Text>
+          <Text style={styles.title}>What&apos;s your age group?</Text>
           <Text style={styles.subtitle}>This helps us personalize your learning experience</Text>
         </View>
 
@@ -154,7 +154,7 @@ export default function OnboardingScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>What's your primary context?</Text>
+          <Text style={styles.title}>What&apos;s your primary context?</Text>
           <Text style={styles.subtitle}>Where will you use these words?</Text>
         </View>
 

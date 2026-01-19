@@ -176,7 +176,7 @@ export default function ConfirmScreen() {
         <Text style={styles.title}>Check Your Email</Text>
         {/* Subtitle with email address displayed */}
         <Text style={styles.subtitle}>
-          We've sent a verification code to {'\n'}
+          We&apos;ve sent a verification code to {'\n'}
           {/* Email address displayed in bold blue color */}
           <Text style={styles.email}>{email}</Text>
         </Text>
@@ -224,7 +224,7 @@ export default function ConfirmScreen() {
           >
             {/* Link text with dynamic resend button text */}
             <Text style={styles.linkText}>
-              Didn't receive code? <Text style={styles.linkTextBold}>
+              Didn&apos;t receive code? <Text style={styles.linkTextBold}>
                 {/* Show "Sending..." while resending, otherwise "Resend" */}
                 {isResending ? 'Sending...' : 'Resend'}
               </Text>
