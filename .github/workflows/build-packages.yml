@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,13 +27,14 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx eas-cli init --non-interactive --force
-      - run: npx eas-cli build --platform android --non-interactive
+      - run: npx eas-cli@latest init --non-interactive --force --id "$EAS_PROJECT_ID"
+      - run: npx eas-cli@latest build --platform android --non-interactive
 
   build-ios:
     runs-on: macos-latest
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,6 +42,6 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx eas-cli init --non-interactive --force
-      - run: npx eas-cli build --platform ios --non-interactive
+      - run: npx eas-cli@latest init --non-interactive --force --id "$EAS_PROJECT_ID"
+      - run: npx eas-cli@latest build --platform ios --non-interactive
 
