@@ -27,7 +27,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx eas-cli@latest build --platform android --non-interactive
+      - run: npx eas-cli@latest build --platform android --non-interactive --profile preview
 
   # build-ios:
   #   runs-on: macos-latest
