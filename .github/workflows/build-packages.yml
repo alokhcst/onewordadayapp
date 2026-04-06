@@ -57,6 +57,15 @@ jobs:
               --content-type "text/html; charset=utf-8" \
               --metadata-directive REPLACE
           done
+          # Tab icon: short CDN cache so new favicons show after deploy (query ?v= in HTML helps too)
+          if [ -f dist/favicon.ico ]; then
+            FKEY="favicon.ico"
+            [ -n "$P" ] && FKEY="${P}/favicon.ico"
+            aws s3 cp dist/favicon.ico "s3://${S3_BUCKET}/${FKEY}" \
+              --cache-control "public, max-age=300" \
+              --content-type "image/x-icon" \
+              --metadata-directive REPLACE
+          fi
 
   build-android:
     runs-on: ubuntu-latest
