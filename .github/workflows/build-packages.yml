@@ -6,7 +6,7 @@ on:
 jobs:
   build-web:
     runs-on: ubuntu-latest
-    # S3 deploy: set repo variable ENABLE_S3_DEPLOY=true, optional AWS_REGION (defaults us-east-1)
+    # S3 deploy: ENABLE_S3_DEPLOY=true; optional vars: AWS_REGION, AWS_S3_PREFIX (no leading slash)
     # Secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_WEB_BUCKET
     permissions:
       contents: read
@@ -31,7 +31,32 @@ jobs:
         if: ${{ vars.ENABLE_S3_DEPLOY == 'true' }}
         env:
           S3_BUCKET: ${{ secrets.AWS_S3_WEB_BUCKET }}
-        run: aws s3 sync dist/ "s3://${S3_BUCKET}/" --delete
+          S3_PREFIX: ${{ vars.AWS_S3_PREFIX }}
+        run: |
+          set -euo pipefail
+          if [ -z "${S3_BUCKET:-}" ]; then
+            echo "::error::AWS_S3_WEB_BUCKET secret is empty."
+            exit 1
+          fi
+          P=""
+          if [ -n "${S3_PREFIX:-}" ]; then
+            P="${S3_PREFIX#/}"
+            P="${P%/}"
+          fi
+          DEST="s3://${S3_BUCKET}/${P:+$P/}"
+          echo "Sync destination: ${DEST}"
+          # Full sync + prune removed files (--delete safe with full dist/ tree)
+          aws s3 sync dist/ "${DEST}" --delete --only-show-errors \
+            --cache-control "public, max-age=86400"
+          # Refresh HTML with no-cache so clients load new JS/CSS references after deploy
+          find dist -type f -name '*.html' -print0 | while IFS= read -r -d '' f; do
+            key="${f#dist/}"
+            [ -n "$P" ] && key="${P}/${key}"
+            aws s3 cp "$f" "s3://${S3_BUCKET}/${key}" \
+              --cache-control "public, max-age=0, must-revalidate" \
+              --content-type "text/html; charset=utf-8" \
+              --metadata-directive REPLACE
+          done
 
   build-android:
     runs-on: ubuntu-latest
