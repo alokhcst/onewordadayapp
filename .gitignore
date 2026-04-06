@@ -135,6 +135,7 @@ function.zip
 backend/**/function.zip
 
 # Test and temp files
+payload.json
 test-*.json
 *-response.json
 *-payload.json
