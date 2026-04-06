@@ -6,6 +6,10 @@ on:
 jobs:
   build-web:
     runs-on: ubuntu-latest
+    # Requires repo secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_WEB_BUCKET
+    # Optional: AWS_REGION (defaults to us-east-1 below)
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -14,6 +18,20 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx expo export --platform web
+      - name: Verify web export output
+        run: test -d dist && ls -la dist
+      - name: Configure AWS credentials
+        if: ${{ secrets.AWS_S3_WEB_BUCKET != '' && secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION != '' && secrets.AWS_REGION || 'us-east-1' }}
+      - name: Deploy dist/ to S3
+        if: ${{ secrets.AWS_S3_WEB_BUCKET != '' && secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' }}
+        env:
+          S3_BUCKET: ${{ secrets.AWS_S3_WEB_BUCKET }}
+        run: aws s3 sync dist/ "s3://${S3_BUCKET}/" --delete
 
   build-android:
     runs-on: ubuntu-latest
