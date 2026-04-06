@@ -3,6 +3,14 @@ import '@aws-amplify/react-native';
 import { Amplify } from 'aws-amplify';
 import 'react-native-get-random-values';
 
+/** Web-only; on Android/iOS `window` may exist without `location` — never read `.origin` blindly. */
+function getWebOrigin(): string {
+  if (typeof window === 'undefined') return 'http://localhost:19006';
+  const loc = window.location;
+  if (loc == null || typeof loc.origin !== 'string') return 'http://localhost:19006';
+  return loc.origin;
+}
+
 // AWS Configuration
 // Replace these values with your actual AWS resources after deployment
 export const awsConfig = {
@@ -15,14 +23,8 @@ export const awsConfig = {
         oauth: {
           domain: getEnv('EXPO_PUBLIC_OAUTH_DOMAIN') || 'onewordaday-production.auth.us-east-1.amazoncognito.com',
           scopes: ['email', 'openid', 'profile'],
-          redirectSignIn: [
-            'onewordadayapp://',
-            typeof window !== 'undefined' ? window.location.origin : 'http://localhost:19006'
-          ],
-          redirectSignOut: [
-            'onewordadayapp://logout',
-            typeof window !== 'undefined' ? window.location.origin + '/logout' : 'http://localhost:19006/logout'
-          ],
+          redirectSignIn: ['onewordadayapp://', getWebOrigin()],
+          redirectSignOut: ['onewordadayapp://logout', `${getWebOrigin()}/logout`],
           responseType: 'code' as const,
         },
       },
