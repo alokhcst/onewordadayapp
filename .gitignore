@@ -142,6 +142,10 @@ test-*.json
 testdata/update-word.json
 testdata/today-word.json
 
+# Playwright
+test/test-results/
+playwright-report/
+
 # Logs
 logs/
 *.log.*

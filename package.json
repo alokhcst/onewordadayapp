@@ -3,6 +3,8 @@
   "main": "expo-router/entry",
   "version": "1.0.2",
   "scripts": {
+    "test:e2e": "playwright test --config=test/playwright/playwright.config.mjs",
+    "test:e2e:install": "playwright install chromium",
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
@@ -52,7 +54,9 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.51.0",
     "@types/react": "~19.1.0",
+    "dotenv": "^16.4.7",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
