@@ -79,8 +79,11 @@ export default function OnboardingScreen() {
         notificationPreferences: {
           dailyWord: {
             enabled: true,
-            channels: Platform.OS === 'web' ? [] : ['push'],
-            time: '08:00',
+            channels: Platform.OS === 'web' ? [] : ['local', 'push'],
+            frequency: 'once_daily',
+            primaryTime: '09:00',
+            secondaryTime: '18:00',
+            time: '09:00',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           },
         },

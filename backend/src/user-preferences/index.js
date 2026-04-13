@@ -19,6 +19,55 @@ const getMembershipLevel = (points) => {
   return match ? match.level : 'member';
 };
 
+const DEFAULT_NOTIFICATION_PREFS = {
+  dailyWord: {
+    enabled: true,
+    channels: ['local'],
+    frequency: 'once_daily',
+    primaryTime: '09:00',
+    secondaryTime: '18:00',
+    time: '09:00',
+    timezone: 'UTC'
+  },
+  feedbackReminder: {
+    enabled: true,
+    time: '20:00'
+  },
+  milestones: {
+    enabled: true
+  }
+};
+
+/**
+ * Deep-merge notification preferences so partial PUT bodies do not wipe sibling keys.
+ */
+function mergeNotificationPreferences(existing, incoming) {
+  const prev = existing && typeof existing === 'object' ? existing : {};
+  if (!incoming || typeof incoming !== 'object') {
+    return Object.keys(prev).length ? prev : { ...DEFAULT_NOTIFICATION_PREFS };
+  }
+  return {
+    ...DEFAULT_NOTIFICATION_PREFS,
+    ...prev,
+    ...incoming,
+    dailyWord: {
+      ...DEFAULT_NOTIFICATION_PREFS.dailyWord,
+      ...prev.dailyWord,
+      ...incoming.dailyWord
+    },
+    feedbackReminder: {
+      ...DEFAULT_NOTIFICATION_PREFS.feedbackReminder,
+      ...prev.feedbackReminder,
+      ...incoming.feedbackReminder
+    },
+    milestones: {
+      ...DEFAULT_NOTIFICATION_PREFS.milestones,
+      ...prev.milestones,
+      ...incoming.milestones
+    }
+  };
+}
+
 /**
  * Lambda handler for user preferences management
  * API: GET /user/profile, PUT /user/profile
@@ -176,21 +225,7 @@ async function getUserProfile(userId, email, name) {
         pointsTotal: 0,
         membershipLevel: 'member',
         membershipUpdatedAt: null,
-        notificationPreferences: {
-          dailyWord: {
-            enabled: true,
-            channels: ['push'],
-            time: '08:00',
-            timezone: 'UTC'
-          },
-          feedbackReminder: {
-            enabled: true,
-            time: '20:00'
-          },
-          milestones: {
-            enabled: true
-          }
-        },
+        notificationPreferences: { ...DEFAULT_NOTIFICATION_PREFS },
         contactInfo: {
           expoPushToken: null,
           phoneNumber: null
@@ -385,21 +420,10 @@ async function updateUserProfile(userId, email, name, requestBody) {
       pointsTotal: basePoints,
       membershipLevel: baseMembershipLevel,
       membershipUpdatedAt,
-      notificationPreferences: body.notificationPreferences || existingUser.Item?.notificationPreferences || {
-        dailyWord: {
-          enabled: true,
-          channels: ['push'],
-          time: '08:00',
-          timezone: 'UTC'
-        },
-        feedbackReminder: {
-          enabled: true,
-          time: '20:00'
-        },
-        milestones: {
-          enabled: true
-        }
-      },
+      notificationPreferences: mergeNotificationPreferences(
+        isNewUser ? null : existingUser.Item?.notificationPreferences,
+        body.notificationPreferences
+      ),
       contactInfo: body.contactInfo || existingUser.Item?.contactInfo || {
         expoPushToken: body.expoPushToken || null,
         phoneNumber: body.phoneNumber || null,

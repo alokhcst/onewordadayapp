@@ -1,6 +1,9 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { api } from '@/lib/api';
+import { syncDailyWordLocalSchedules } from '@/lib/dailyWordNotifications';
+import type { DailyWordFrequency } from '@/lib/notificationPreferences';
+import { normalizeDailyWordPrefs, parseTimeToParts, toStoredDailyWordPrefs } from '@/lib/notificationPreferences';
 import { getMembershipBadge, getMembershipLevel, MembershipLevel } from '@/lib/points';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -15,6 +18,10 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [editedDailyFrequency, setEditedDailyFrequency] = useState<DailyWordFrequency>('once_daily');
+  const [editedPrimaryTime, setEditedPrimaryTime] = useState('09:00');
+  const [editedSecondaryTime, setEditedSecondaryTime] = useState('18:00');
+  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [editedEmail, setEditedEmail] = useState('');
@@ -99,6 +106,12 @@ export default function ProfileScreen() {
       setEditedContext(response.profile?.context || '');
       setEditedExamPrep(response.profile?.examPrep || '');
       setNotificationsEnabled(response.profile?.notificationPreferences?.dailyWord?.enabled !== false);
+      const d = normalizeDailyWordPrefs(
+        response.profile?.notificationPreferences?.dailyWord as Record<string, unknown> | undefined
+      );
+      setEditedDailyFrequency(d.frequency);
+      setEditedPrimaryTime(d.primaryTime);
+      setEditedSecondaryTime(d.secondaryTime);
       
       console.log('  - State updated with:');
       console.log('    * editedName:', finalName);
@@ -234,23 +247,66 @@ export default function ProfileScreen() {
   const handleToggleNotifications = async (value: boolean) => {
     try {
       setNotificationsEnabled(value);
-      
+
+      const daily = normalizeDailyWordPrefs(
+        profile?.notificationPreferences?.dailyWord as Record<string, unknown> | undefined
+      );
+      const nextDaily = toStoredDailyWordPrefs({ ...daily, enabled: value });
       const updatedPreferences = {
         ...profile?.notificationPreferences,
-        dailyWord: {
-          ...profile?.notificationPreferences?.dailyWord,
-          enabled: value,
-        },
+        dailyWord: nextDaily,
       };
 
       await api.updateUserProfile({
         notificationPreferences: updatedPreferences,
       });
+      await syncDailyWordLocalSchedules({ notificationPreferences: updatedPreferences });
+      await loadProfile();
       showSuccess(value ? 'Notifications enabled' : 'Notifications disabled');
     } catch (error) {
       console.error('Error updating notifications:', error);
-      setNotificationsEnabled(!value); // Revert on error
+      setNotificationsEnabled(!value);
       showError('Failed to update notification preferences');
+    }
+  };
+
+  const handleSaveNotificationSchedule = async () => {
+    if (!parseTimeToParts(editedPrimaryTime)) {
+      showError('Primary time must be HH:mm (24h), e.g. 09:00');
+      return;
+    }
+    if (editedDailyFrequency === 'twice_daily' && !parseTimeToParts(editedSecondaryTime)) {
+      showError('Second reminder time must be HH:mm (24h)');
+      return;
+    }
+
+    setIsSavingNotifications(true);
+    try {
+      const daily = normalizeDailyWordPrefs(
+        profile?.notificationPreferences?.dailyWord as Record<string, unknown> | undefined
+      );
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+      const nextDaily = toStoredDailyWordPrefs({
+        ...daily,
+        enabled: notificationsEnabled,
+        frequency: editedDailyFrequency,
+        primaryTime: editedPrimaryTime.trim(),
+        secondaryTime: editedSecondaryTime.trim(),
+        timezone: tz,
+      });
+      const updatedPreferences = {
+        ...profile?.notificationPreferences,
+        dailyWord: nextDaily,
+      };
+      await api.updateUserProfile({ notificationPreferences: updatedPreferences });
+      await syncDailyWordLocalSchedules({ notificationPreferences: updatedPreferences });
+      await loadProfile();
+      showSuccess('Reminder schedule saved');
+    } catch (error) {
+      console.error('Error saving notification schedule:', error);
+      showError('Failed to save reminder schedule');
+    } finally {
+      setIsSavingNotifications(false);
     }
   };
 
@@ -557,19 +613,140 @@ export default function ProfileScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Settings</Text>
-        
+
         <View style={styles.card}>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Daily Notifications</Text>
-              <Text style={styles.settingDescription}>Get notified for daily words</Text>
+              <Text style={styles.settingLabel}>Daily word reminders</Text>
+              <Text style={styles.settingDescription}>
+                Local notification when your word is ready (one word per day; same word if you choose two reminders).
+              </Text>
             </View>
             <Switch
+              testID="daily-word-reminders-switch"
               value={notificationsEnabled}
               onValueChange={handleToggleNotifications}
               trackColor={{ false: '#ddd', true: '#4A90E2' }}
             />
           </View>
+
+          {Platform.OS === 'web' && (
+            <Text style={styles.hintText}>
+              Timed local reminders run on iOS and Android. On web, preferences are still saved to your profile.
+            </Text>
+          )}
+
+          <View style={styles.divider} />
+
+          <Text style={styles.inputLabel}>Reminder frequency</Text>
+          <Text style={styles.settingDescription}>Default: once per day</Text>
+          {Platform.OS === 'web' ? (
+            <View style={styles.pickerContainer}>
+              <select
+                data-testid="daily-word-frequency-select"
+                style={webStyles.select as any}
+                value={editedDailyFrequency}
+                onChange={(e) => setEditedDailyFrequency(e.target.value as DailyWordFrequency)}
+              >
+                <option value="once_daily">Once daily</option>
+                <option value="twice_daily">Twice daily (same word)</option>
+              </select>
+            </View>
+          ) : (
+            <View style={styles.freqRow}>
+              <TouchableOpacity
+                testID="daily-word-frequency-once"
+                style={[styles.freqChip, editedDailyFrequency === 'once_daily' && styles.freqChipActive]}
+                onPress={() => setEditedDailyFrequency('once_daily')}
+              >
+                <Text style={[styles.freqChipText, editedDailyFrequency === 'once_daily' && styles.freqChipTextActive]}>
+                  Once daily
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="daily-word-frequency-twice"
+                style={[styles.freqChip, editedDailyFrequency === 'twice_daily' && styles.freqChipActive]}
+                onPress={() => setEditedDailyFrequency('twice_daily')}
+              >
+                <Text style={[styles.freqChipText, editedDailyFrequency === 'twice_daily' && styles.freqChipTextActive]}>
+                  Twice daily
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={[styles.inputGroup, { marginTop: 14 }]}>
+            <Text style={styles.inputLabel}>Primary time (local)</Text>
+            {Platform.OS === 'web' ? (
+              <input
+                data-testid="daily-word-primary-time"
+                type="time"
+                value={editedPrimaryTime.length === 5 ? editedPrimaryTime : '09:00'}
+                onChange={(e) => setEditedPrimaryTime(e.target.value || '09:00')}
+                style={{
+                  padding: 12,
+                  fontSize: 16,
+                  borderWidth: 1,
+                  borderColor: '#ddd',
+                  borderRadius: 12,
+                  backgroundColor: '#fff',
+                }}
+              />
+            ) : (
+              <TextInput
+                testID="daily-word-primary-time"
+                style={styles.input}
+                value={editedPrimaryTime}
+                onChangeText={setEditedPrimaryTime}
+                placeholder="09:00"
+                autoCapitalize="none"
+              />
+            )}
+          </View>
+
+          {editedDailyFrequency === 'twice_daily' && (
+            <View style={[styles.inputGroup, { marginTop: 12 }]}>
+              <Text style={styles.inputLabel}>Second reminder (local)</Text>
+              {Platform.OS === 'web' ? (
+                <input
+                  data-testid="daily-word-secondary-time"
+                  type="time"
+                  value={editedSecondaryTime.length === 5 ? editedSecondaryTime : '18:00'}
+                  onChange={(e) => setEditedSecondaryTime(e.target.value || '18:00')}
+                  style={{
+                    padding: 12,
+                    fontSize: 16,
+                    borderWidth: 1,
+                    borderColor: '#ddd',
+                    borderRadius: 12,
+                    backgroundColor: '#fff',
+                  }}
+                />
+              ) : (
+                <TextInput
+                  testID="daily-word-secondary-time"
+                  style={styles.input}
+                  value={editedSecondaryTime}
+                  onChangeText={setEditedSecondaryTime}
+                  placeholder="18:00"
+                  autoCapitalize="none"
+                />
+              )}
+            </View>
+          )}
+
+          <TouchableOpacity
+            testID="save-reminder-schedule"
+            style={[styles.editButton, styles.saveButton, { marginTop: 16 }, isSavingNotifications && styles.buttonDisabled]}
+            onPress={handleSaveNotificationSchedule}
+            disabled={isSavingNotifications}
+          >
+            {isSavingNotifications ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>Save reminder schedule</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -858,6 +1035,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#E24A4A',
+  },
+  hintText: {
+    fontSize: 13,
+    color: '#888',
+    marginTop: 12,
+    lineHeight: 18,
+  },
+  freqRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
+  freqChip: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#fafafa',
+    alignItems: 'center',
+  },
+  freqChipActive: {
+    borderColor: '#4A90E2',
+    backgroundColor: '#E8F4FF',
+  },
+  freqChipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  freqChipTextActive: {
+    color: '#4A90E2',
   },
 });
 

@@ -10,7 +10,8 @@ import { useRouter } from 'expo-router';
 // Import Expo Speech API for text-to-speech functionality
 import * as Speech from 'expo-speech';
 // Import React hooks: useEffect for side effects, useState for component state
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useRef, useState } from 'react';
 // Import React Native UI components
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -27,32 +28,30 @@ export default function TodayScreen() {
   // State variable to track if text-to-speech is currently playing
   const [isSpeaking, setIsSpeaking] = useState(false);
 
-  // Effect hook that runs once when component mounts
-  useEffect(() => {
-    // Load today's word when screen first appears
-    loadTodaysWord();
-  }, []); // Empty dependency array means this runs only once on mount
+  const firstTabFocus = useRef(true);
 
-  // Async function to fetch today's word from the API
-  const loadTodaysWord = async () => {
+  const loadTodaysWord = useCallback(async (showSpinner = true) => {
+    if (showSpinner) setIsLoading(true);
     try {
-      // Call API endpoint to get today's word for the authenticated user
       const response = await api.getTodaysWord();
-      // Store the word data in state
       setWord(response.word);
     } catch (error: any) {
-      // Log error for debugging
       console.error('Error loading word:', error);
-      // If API returns 404, show user-friendly message
       if (error.response?.status === 404) {
-        // Show native alert dialog
         Alert.alert('No Word Yet', 'Your daily word will be generated soon. Check back later!');
       }
     } finally {
-      // Always set loading to false, even if there was an error
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const showSpinner = firstTabFocus.current;
+      firstTabFocus.current = false;
+      loadTodaysWord(showSpinner);
+    }, [loadTodaysWord])
+  );
 
   // Function to handle text-to-speech - speak the word aloud
   const handleSpeak = async () => {
@@ -147,7 +146,7 @@ export default function TodayScreen() {
         <Text style={styles.emptyEmoji}>📚</Text>
         <Text style={styles.emptyTitle}>No Word Available</Text>
         <Text style={styles.emptyText}>Your daily word will appear here</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadTodaysWord}>
+        <TouchableOpacity style={styles.retryButton} onPress={() => void loadTodaysWord(true)}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>

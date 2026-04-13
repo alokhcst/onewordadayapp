@@ -7,7 +7,8 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const RATINGS = [1, 2, 3, 4, 5];
-const DIFFICULTIES = [
+type DifficultyValue = 'too_easy' | 'appropriate' | 'too_difficult';
+const DIFFICULTIES: { value: DifficultyValue; label: string; emoji: string }[] = [
   { value: 'too_easy', label: 'Too Easy', emoji: '😴' },
   { value: 'appropriate', label: 'Just Right', emoji: '😊' },
   { value: 'too_difficult', label: 'Too Hard', emoji: '😰' },

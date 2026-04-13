@@ -110,9 +110,14 @@ export const api = {
       dailyWord?: {
         enabled?: boolean;
         time?: string;
+        primaryTime?: string;
+        secondaryTime?: string;
+        frequency?: 'once_daily' | 'twice_daily';
         channels?: string[];
         timezone?: string;
       };
+      feedbackReminder?: { enabled?: boolean; time?: string };
+      milestones?: { enabled?: boolean };
     };
   }) => {
     console.log('========================================');

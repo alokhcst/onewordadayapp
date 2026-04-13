@@ -19,6 +19,7 @@ import { configureAmplify } from '@/lib/aws-config';
 // Import AuthProvider context - provides authentication state and functions to entire app
 import { AuthProvider } from '@/contexts/AuthContext';
 // Import ToastProvider context - provides toast notification functions to entire app
+import { DailyWordNotificationBootstrap } from '@/components/DailyWordNotificationBootstrap';
 import { ToastProvider } from '@/contexts/ToastContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete
@@ -46,6 +47,7 @@ export default function RootLayout() {
     <ToastProvider>
       {/* AuthProvider wraps auth functionality - provides user state, sign in/out functions */}
       <AuthProvider>
+        <DailyWordNotificationBootstrap />
         {/* ThemeProvider applies dark/light theme based on device settings */}
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           {/* Stack navigator - main navigation structure for the app */}
