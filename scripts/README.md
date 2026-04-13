@@ -8,7 +8,7 @@
 .\scripts\deploy.ps1 -Action <action>
 ```
 
-See **`../DEPLOYMENT_GUIDE.md`** for complete documentation.
+See **`../spec/documents/DEPLOYMENT_GUIDE.md`** for complete documentation.
 
 ---
 
@@ -168,7 +168,7 @@ cp terraform/terraform.tfvars.example terraform/terraform.tfvars
 
 ## 📚 Documentation
 
-- **`../DEPLOYMENT_GUIDE.md`** - Complete deployment guide
+- **`../spec/documents/DEPLOYMENT_GUIDE.md`** - Complete deployment guide
 - **`../ARCHITECTURE_FLOW_DIAGRAM.md`** - System architecture
 - **`../CHANGES_SUMMARY.md`** - Recent changes and fixes
 - **`../SQUARESPACE_QUICKSTART.md`** - Custom domain setup
@@ -236,7 +236,7 @@ All old scripts still work (for backward compatibility), but **we recommend usin
 
 ## 🎯 Next Steps
 
-1. **Read the full guide**: See `../DEPLOYMENT_GUIDE.md`
+1. **Read the full guide**: See `../spec/documents/DEPLOYMENT_GUIDE.md`
 2. **Try it out**: Run `.\scripts\deploy.ps1 -Action status`
 3. **Update bookmarks**: Use `deploy.ps1` for all deployments
 4. **Share with team**: Point them to this README

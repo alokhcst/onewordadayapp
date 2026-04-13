@@ -1,6 +1,6 @@
 /**
  * Regression tests for word non-repetition logic (mirrors backend behavior).
- * @see test/fixtures/REPETITION_REGRESSION_CASES.md
+ * @see spec/testing/word-repetition-regression.md
  */
 import { test, expect } from '@playwright/test';
 import {

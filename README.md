@@ -1192,14 +1192,15 @@ aws dynamodb get-item --table-name onewordaday-production-daily-words --key '{"u
 | Document | Description |
 |----------|-------------|
 | **README.md** | This file - complete overview |
-| **[ARCHITECTURE_FLOW_DIAGRAM.md](./documents/ARCHITECTURE_FLOW_DIAGRAM.md)** | Detailed system diagrams |
-| **[BACKEND_ERROR_HANDLING_IMPROVEMENTS.md](./documents/BACKEND_ERROR_HANDLING_IMPROVEMENTS.md)** | Error handling enhancements |
-| **[GOOGLE_OAUTH_SETUP.md](./documents/GOOGLE_OAUTH_SETUP.md)** | Google OAuth configuration guide |
-| **[HISTORY_FEATURE_ENHANCEMENT.md](./documents/HISTORY_FEATURE_ENHANCEMENT.md)** | Inline feedback feature |
-| **[TERRAFORM_FIXES_SUMMARY.md](./documents/TERRAFORM_FIXES_SUMMARY.md)** | Infrastructure fixes |
-| **[GITIGNORE_GUIDE.md](./documents/GITIGNORE_GUIDE.md)** | Version control configuration |
-| **[USER_NAME_DISPLAY_FIX.md](./documents/USER_NAME_DISPLAY_FIX.md)** | Username display debugging |
-| **[DEPLOYMENT_GUIDE.md](./documents/DEPLOYMENT_GUIDE.md)** | Step-by-step deployment |
+| **[spec/README.md](./spec/README.md)** | Spec-driven index (requirements, features, docs) |
+| **[ARCHITECTURE_FLOW_DIAGRAM.md](./spec/documents/ARCHITECTURE_FLOW_DIAGRAM.md)** | Detailed system diagrams |
+| **[BACKEND_ERROR_HANDLING_IMPROVEMENTS.md](./spec/documents/BACKEND_ERROR_HANDLING_IMPROVEMENTS.md)** | Error handling enhancements |
+| **[GOOGLE_OAUTH_SETUP.md](./spec/documents/GOOGLE_OAUTH_SETUP.md)** | Google OAuth configuration guide |
+| **[HISTORY_FEATURE_ENHANCEMENT.md](./spec/documents/HISTORY_FEATURE_ENHANCEMENT.md)** | Inline feedback feature |
+| **[TERRAFORM_FIXES_SUMMARY.md](./spec/documents/TERRAFORM_FIXES_SUMMARY.md)** | Infrastructure fixes |
+| **[GITIGNORE_GUIDE.md](./spec/documents/GITIGNORE_GUIDE.md)** | Version control configuration |
+| **[USER_NAME_DISPLAY_FIX.md](./spec/documents/USER_NAME_DISPLAY_FIX.md)** | Username display debugging |
+| **[DEPLOYMENT_GUIDE.md](./spec/documents/DEPLOYMENT_GUIDE.md)** | Step-by-step deployment |
 | **scripts/README.md** | Deployment script reference |
 
 ### Repository Layout (DevOps-Ready)
@@ -1207,7 +1208,8 @@ aws dynamodb get-item --table-name onewordaday-production-daily-words --key '{"u
 | Area | Location | Notes |
 |------|----------|-------|
 | App (Expo Web + Mobile) | `./` | Current app lives at repo root |
-| Docs | `docs/` | Entry point (docs currently in `documents/`) |
+| Specs & docs | `spec/` | Requirements, features, full doc library in `spec/documents/` |
+| Docs pointer | `docs/` | Short entry; see `spec/README.md` |
 | Ops scripts | `ops/` | Entry point (scripts in `scripts/`) |
 | Infrastructure | `infra/` | Entry point (Terraform in `terraform/`) |
 | Backend services | `services/` | Entry point (backend in `backend/`) |
@@ -1216,10 +1218,11 @@ aws dynamodb get-item --table-name onewordaday-production-daily-words --key '{"u
 
 ### Quick Links
 
-- [Architecture Diagrams](./documents/ARCHITECTURE_FLOW_DIAGRAM.md)
-- [Google OAuth Setup](./documents/GOOGLE_OAUTH_SETUP.md)
+- [Spec index](./spec/README.md)
+- [Architecture Diagrams](./spec/documents/ARCHITECTURE_FLOW_DIAGRAM.md)
+- [Google OAuth Setup](./spec/documents/GOOGLE_OAUTH_SETUP.md)
 - [Deployment Script Guide](./scripts/README.md)
-- [History Feature Guide](./documents/HISTORY_FEATURE_ENHANCEMENT.md)
+- [History Feature Guide](./spec/documents/HISTORY_FEATURE_ENHANCEMENT.md)
 
 ---
 
