@@ -15,6 +15,7 @@ resource "aws_secretsmanager_secret_version" "llm_api_keys_version" {
   secret_id = aws_secretsmanager_secret.llm_api_keys.id
   secret_string = jsonencode({
     groq       = "your-groq-api-key-here"
+    openai     = "your-openai-api-key-here"
     openrouter = "your-openrouter-api-key-here"
     together   = "your-together-api-key-here"
   })

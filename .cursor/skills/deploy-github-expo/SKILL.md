@@ -12,14 +12,15 @@ description: >-
 ## Preconditions
 
 - Working tree changes are intentional; **never** commit `.env`, keystores, or tokens. Confirm `.gitignore` covers secrets.
-- **CI** (`.github/workflows/ci.yml`) runs on **push** and **pull_request** to **`main`**: `npm ci`, `lint`, `typecheck` if present.
-- **Build Packages** (`.github/workflows/build-packages.yml`) runs only on **`workflow_dispatch`** (manual). It runs jobs **`build-web`** and **`build-android`** in parallel. Web deploy to S3 is gated by repo variable **`ENABLE_S3_DEPLOY`** and AWS secrets (see workflow comments).
+- **CI** (`.github/workflows/ci.yml`) runs on **push** and **pull_request** to **`main`**: `npm ci`, `lint`, `typecheck`.
+- **Build Packages** (`.github/workflows/build-packages.yml`) runs only on **`workflow_dispatch`** (manual). It runs jobs **`build-web`** and **`build-android`** in parallel. Web deploy to S3 is gated by repo variable **`ENABLE_S3_DEPLOY`** and AWS secrets (see workflow comments). It does **not** run Terraform.
+- **Terraform** (`.github/workflows/terraform.yml`) runs **`terraform fmt` / `init` / `validate`** when `terraform/**` changes (and can be triggered manually). Plan/apply stay local; see **`spec/documents/CI_CD_AND_SECRETS.md`**.
 
 ## Checklist
 
 ```
 - [ ] git status — only intended files; no secrets
-- [ ] npm run lint && npx tsc --noEmit (or fix failures; CI uses typecheck --if-present)
+- [ ] npm run lint && npm run typecheck
 - [ ] git add <paths>
 - [ ] git commit -m "conventional message"
 - [ ] git push origin <branch>
@@ -83,16 +84,6 @@ gh run watch
 | `build-android`| Syncs `EXPO_PUBLIC_*` secrets to EAS **preview**, then `eas build --platform android --profile preview`. Requires `EXPO_TOKEN`, `EAS_PROJECT_ID`, and Expo public secrets. |
 
 If a job fails, open the run log in Actions; common issues are missing secrets or EAS project permissions.
-
-## Optional: CI typecheck
-
-`package.json` may not define `typecheck`; CI skips it with `--if-present`. Locally run:
-
-```bash
-npx tsc --noEmit
-```
-
-Consider adding `"typecheck": "tsc --noEmit"` to `package.json` so CI enforces types.
 
 ## Do not
 

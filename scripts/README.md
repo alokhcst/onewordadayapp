@@ -14,6 +14,20 @@ See **`../spec/documents/DEPLOYMENT_GUIDE.md`** for complete documentation.
 
 ## Quick Commands
 
+### OpenAI key (voice practice) → AWS Secrets Manager
+
+From repo root, with `OPENAI_API_KEY` set in `.env` and AWS credentials configured:
+
+```powershell
+cd backend
+$env:LLM_KEYS_SECRET_NAME = "onewordaday-production/llm-api-keys"   # use your Terraform secret name
+npm run sync-openai-secret
+```
+
+This merges the `openai` field into the same JSON secret as Groq (`llm-api-keys`). The voice-practice Lambda reads it via `SECRET_NAME` and the `openai` key.
+
+Broader policy (CI vs Terraform, where keys live): **`spec/documents/CI_CD_AND_SECRETS.md`**.
+
 ### Most Common Operations
 
 ```powershell

@@ -41,10 +41,9 @@ yarn-error.log
 dist/
 web-build/
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Environment — never commit secrets (template only: .env.example)
+.env*
+!.env.example
 
 # Terraform
 **/.terraform/

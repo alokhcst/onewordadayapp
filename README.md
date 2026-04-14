@@ -1052,7 +1052,7 @@ aws logs tail /aws/lambda/onewordaday-production-get-todays-word --since 5m --fi
 
 ### Security Best Practices
 
-1. **Never commit secrets** - Use `.env.example` templates
+1. **Never commit secrets** - Use `.env.example` at repo root; see [CI/CD and secrets](spec/documents/CI_CD_AND_SECRETS.md) for GitHub vs Terraform vs Secrets Manager
 2. **Rotate credentials regularly** - Update API keys quarterly
 3. **Monitor CloudWatch** - Set up alarms for unusual activity
 4. **Review IAM permissions** - Audit regularly

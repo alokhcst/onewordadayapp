@@ -23,6 +23,7 @@ This folder is the **single home for product specs, features, requirements, and 
 - [requirements2.md](documents/requirements2.md) — additional requirements
 - [AI word generation](documents/AI_WORD_GENERATION.md)
 - [Architecture flow](documents/ARCHITECTURE_FLOW_DIAGRAM.md)
+- [CI/CD and secrets](documents/CI_CD_AND_SECRETS.md) — workflows, Terraform, GitHub vs AWS keys
 - [Word repetition regression matrix](testing/word-repetition-regression.md)
 
 The previous root folder `documents/` has been **moved** to `spec/documents/`. If you have old links, use `spec/documents/…` (or see [documents/README.md](../documents/README.md) at repo root).

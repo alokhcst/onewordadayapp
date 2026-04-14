@@ -5,7 +5,8 @@
   "description": "Backend Lambda functions for One Word A Day app - Using ES Modules",
   "scripts": {
     "build": "node build.js",
-    "deploy": "npm run build && cd ../terraform && terraform apply"
+    "deploy": "npm run build && cd ../terraform && terraform apply",
+    "sync-openai-secret": "node scripts/sync-openai-from-env.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.540.0",
