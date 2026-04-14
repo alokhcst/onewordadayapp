@@ -1,8 +1,8 @@
 # Users Table
 resource "aws_dynamodb_table" "users" {
-  name           = "${var.name_prefix}-users"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "userId"
+  name         = "${var.name_prefix}-users"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "userId"
 
   attribute {
     name = "userId"
@@ -31,10 +31,10 @@ resource "aws_dynamodb_table" "users" {
 
 # Daily Words Table
 resource "aws_dynamodb_table" "daily_words" {
-  name           = "${var.name_prefix}-daily-words"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "userId"
-  range_key      = "date"
+  name         = "${var.name_prefix}-daily-words"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "userId"
+  range_key    = "date"
 
   attribute {
     name = "userId"
@@ -68,9 +68,9 @@ resource "aws_dynamodb_table" "daily_words" {
 
 # Word Bank Table
 resource "aws_dynamodb_table" "word_bank" {
-  name           = "${var.name_prefix}-word-bank"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "wordId"
+  name         = "${var.name_prefix}-word-bank"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "wordId"
 
   attribute {
     name = "wordId"
@@ -110,10 +110,10 @@ resource "aws_dynamodb_table" "word_bank" {
 
 # Feedback Table
 resource "aws_dynamodb_table" "feedback" {
-  name           = "${var.name_prefix}-feedback"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "feedbackId"
-  range_key      = "userId"
+  name         = "${var.name_prefix}-feedback"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "feedbackId"
+  range_key    = "userId"
 
   attribute {
     name = "feedbackId"
@@ -148,9 +148,9 @@ resource "aws_dynamodb_table" "feedback" {
 
 # Notification Logs Table
 resource "aws_dynamodb_table" "notification_logs" {
-  name           = "${var.name_prefix}-notification-logs"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "logId"
+  name         = "${var.name_prefix}-notification-logs"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "logId"
 
   attribute {
     name = "logId"

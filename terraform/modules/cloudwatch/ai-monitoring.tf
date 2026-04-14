@@ -56,7 +56,7 @@ resource "aws_cloudwatch_log_group" "ai_word_generation" {
 
 # Custom metric - Log daily AI usage
 resource "aws_cloudwatch_log_metric_filter" "ai_words_generated" {
-  depends_on = [aws_cloudwatch_log_group.ai_word_generation]
+  depends_on     = [aws_cloudwatch_log_group.ai_word_generation]
   name           = "${var.name_prefix}-ai-words-generated"
   log_group_name = "/aws/lambda/${var.name_prefix}-ai-word-generation"
   pattern        = "[time, request_id, level=INFO, msg=\"Word generated successfully\", ...]"

@@ -85,7 +85,7 @@ resource "aws_cognito_user_pool_client" "main" {
   user_pool_id = aws_cognito_user_pool.main.id
 
   generate_secret = false
-  
+
   depends_on = [
     aws_cognito_user_pool_domain.main,
     aws_cognito_identity_provider.google
@@ -139,14 +139,14 @@ resource "aws_cognito_user_pool_client" "main" {
 
 # Cognito User Pool Domain for Hosted UI
 resource "aws_cognito_user_pool_domain" "main" {
-  domain       = "${var.name_prefix}"
+  domain       = var.name_prefix
   user_pool_id = aws_cognito_user_pool.main.id
 }
 
 # Cognito Identity Provider (Google) - Optional
 resource "aws_cognito_identity_provider" "google" {
   count = var.google_client_id != "" ? 1 : 0
-  
+
   user_pool_id  = aws_cognito_user_pool.main.id
   provider_name = "Google"
   provider_type = "Google"

@@ -440,7 +440,7 @@ resource "aws_api_gateway_gateway_response" "cors_4xx" {
   }
 
   response_parameters = {
-    "gatewayresponse.header.Access-Control-Allow-Origin" = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
     "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
   }
 }
@@ -455,7 +455,7 @@ resource "aws_api_gateway_gateway_response" "cors_5xx" {
   }
 
   response_parameters = {
-    "gatewayresponse.header.Access-Control-Allow-Origin" = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
     "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
   }
 }
@@ -548,7 +548,7 @@ variable "lambda_functions" {
 }
 
 output "api_url" {
-  value = "${aws_api_gateway_stage.main.invoke_url}"
+  value = aws_api_gateway_stage.main.invoke_url
 }
 
 output "api_id" {

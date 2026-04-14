@@ -2,7 +2,7 @@
 resource "aws_cloudwatch_event_rule" "daily_word_generation" {
   name                = "${var.name_prefix}-daily-word-generation"
   description         = "Trigger daily word generation at midnight UTC"
-  schedule_expression = "cron(0 0 * * ? *)"  # Daily at 00:00 UTC
+  schedule_expression = "cron(0 0 * * ? *)" # Daily at 00:00 UTC
 
   tags = {
     Name = "${var.name_prefix}-daily-word-generation"
@@ -27,7 +27,7 @@ resource "aws_lambda_permission" "allow_eventbridge_word_generation" {
 resource "aws_cloudwatch_event_rule" "notification_dispatcher" {
   name                = "${var.name_prefix}-notification-dispatcher"
   description         = "Trigger notification dispatcher every hour"
-  schedule_expression = "rate(1 hour)"  # Every hour to check user preferences
+  schedule_expression = "rate(1 hour)" # Every hour to check user preferences
 
   tags = {
     Name = "${var.name_prefix}-notification-dispatcher"

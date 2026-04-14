@@ -155,12 +155,12 @@ resource "aws_lambda_function" "word_generation" {
 
   environment {
     variables = {
-      USERS_TABLE            = var.users_table_name
-      DAILY_WORDS_TABLE      = var.daily_words_table_name
-      WORD_BANK_TABLE        = var.word_bank_table_name
-      AI_WORD_GEN_FUNCTION   = "${var.name_prefix}-ai-word-generation"
-      USE_AI_GENERATION      = var.use_ai_generation
-      ENVIRONMENT            = var.environment
+      USERS_TABLE          = var.users_table_name
+      DAILY_WORDS_TABLE    = var.daily_words_table_name
+      WORD_BANK_TABLE      = var.word_bank_table_name
+      AI_WORD_GEN_FUNCTION = "${var.name_prefix}-ai-word-generation"
+      USE_AI_GENERATION    = var.use_ai_generation
+      ENVIRONMENT          = var.environment
       # AWS_REGION is automatically provided by Lambda runtime
     }
   }
@@ -253,10 +253,10 @@ resource "aws_lambda_function" "notification_dispatcher" {
 
   environment {
     variables = {
-      USERS_TABLE               = var.users_table_name
-      DAILY_WORDS_TABLE         = var.daily_words_table_name
-      NOTIFICATION_LOGS_TABLE   = var.notification_logs_table_name
-      ENVIRONMENT               = var.environment
+      USERS_TABLE             = var.users_table_name
+      DAILY_WORDS_TABLE       = var.daily_words_table_name
+      NOTIFICATION_LOGS_TABLE = var.notification_logs_table_name
+      ENVIRONMENT             = var.environment
     }
   }
 
@@ -284,10 +284,10 @@ resource "aws_lambda_function" "feedback_processor" {
 
   environment {
     variables = {
-      USERS_TABLE        = var.users_table_name
-      FEEDBACK_TABLE     = var.feedback_table_name
-      DAILY_WORDS_TABLE  = var.daily_words_table_name
-      ENVIRONMENT        = var.environment
+      USERS_TABLE       = var.users_table_name
+      FEEDBACK_TABLE    = var.feedback_table_name
+      DAILY_WORDS_TABLE = var.daily_words_table_name
+      ENVIRONMENT       = var.environment
     }
   }
 
@@ -344,12 +344,12 @@ resource "aws_lambda_function" "get_todays_word" {
 
   environment {
     variables = {
-      USERS_TABLE        = var.users_table_name
-      DAILY_WORDS_TABLE  = var.daily_words_table_name
-      WORD_BANK_TABLE    = var.word_bank_table_name
-      ENVIRONMENT        = var.environment
-      SECRET_NAME        = "onewordaday/llm-api-keys"
-      USE_AI_GENERATION  = "true"
+      USERS_TABLE       = var.users_table_name
+      DAILY_WORDS_TABLE = var.daily_words_table_name
+      WORD_BANK_TABLE   = var.word_bank_table_name
+      ENVIRONMENT       = var.environment
+      SECRET_NAME       = "onewordaday/llm-api-keys"
+      USE_AI_GENERATION = "true"
       # AWS_REGION is automatically provided by Lambda runtime
     }
   }
@@ -407,10 +407,10 @@ resource "aws_lambda_function" "voice_practice" {
 
   environment {
     variables = {
-      USERS_TABLE        = var.users_table_name
-      DAILY_WORDS_TABLE  = var.daily_words_table_name
-      ENVIRONMENT        = var.environment
-      SECRET_NAME        = var.llm_api_keys_secret_name
+      USERS_TABLE          = var.users_table_name
+      DAILY_WORDS_TABLE    = var.daily_words_table_name
+      ENVIRONMENT          = var.environment
+      SECRET_NAME          = var.llm_api_keys_secret_name
       POINTS_VOICE_SUCCESS = "1000"
     }
   }

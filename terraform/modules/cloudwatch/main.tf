@@ -45,7 +45,7 @@ resource "aws_cloudwatch_metric_alarm" "api_latency" {
   namespace           = "AWS/ApiGateway"
   period              = 300
   statistic           = "Average"
-  threshold           = 1000  # 1 second
+  threshold           = 1000 # 1 second
   alarm_description   = "This metric monitors API Gateway latency"
   treat_missing_data  = "notBreaching"
 

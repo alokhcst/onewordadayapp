@@ -1,9 +1,9 @@
 # AI Usage Tracking Table
 resource "aws_dynamodb_table" "ai_usage" {
-  name           = "${var.name_prefix}-ai-usage"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "userId"
-  range_key      = "date"
+  name         = "${var.name_prefix}-ai-usage"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "userId"
+  range_key    = "date"
 
   attribute {
     name = "userId"
