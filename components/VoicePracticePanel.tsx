@@ -1,17 +1,17 @@
 import { api } from '@/lib/api';
-import type { VoicePracticeResult } from '@/lib/voicePracticeTypes';
 import { getMembershipBadge, type MembershipLevel } from '@/lib/points';
+import type { VoicePracticeResult } from '@/lib/voicePracticeTypes';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
+import { File } from 'expo-file-system';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 
 const MAX_RECORDING_MS = 30000;
@@ -67,9 +67,7 @@ export function VoicePracticePanel({ wordId, date, targetWord, onSuccess }: Prop
       }
       setProcessing(true);
       setError(null);
-      const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: 'base64',
-      });
+      const base64 = await new File(uri).base64();
       const mimeType = 'audio/m4a';
       const data = (await api.submitVoicePractice({
         wordId,
