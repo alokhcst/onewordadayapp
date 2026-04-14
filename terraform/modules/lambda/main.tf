@@ -392,6 +392,38 @@ resource "aws_lambda_function" "word_history" {
   }
 }
 
+# Voice practice (Whisper + GPT) — OpenAI key via SECRET_NAME JSON key "openai" or OPENAI_API_KEY env
+resource "aws_lambda_function" "voice_practice" {
+  filename         = "${path.module}/../../../backend/dist/voice-practice.zip"
+  function_name    = "${var.name_prefix}-voice-practice"
+  role             = aws_iam_role.lambda.arn
+  handler          = "index.handler"
+  source_code_hash = fileexists("${path.module}/../../../backend/dist/voice-practice.zip") ? filebase64sha256("${path.module}/../../../backend/dist/voice-practice.zip") : null
+  runtime          = "nodejs18.x"
+  timeout          = 29
+  memory_size      = 512
+
+  layers = [aws_lambda_layer_version.dependencies.arn]
+
+  environment {
+    variables = {
+      USERS_TABLE        = var.users_table_name
+      DAILY_WORDS_TABLE  = var.daily_words_table_name
+      ENVIRONMENT        = var.environment
+      SECRET_NAME        = var.llm_api_keys_secret_name
+      POINTS_VOICE_SUCCESS = "1000"
+    }
+  }
+
+  tracing_config {
+    mode = "Active"
+  }
+
+  lifecycle {
+    ignore_changes = [source_code_hash]
+  }
+}
+
 variable "name_prefix" {
   type = string
 }
@@ -468,6 +500,7 @@ output "lambda_functions" {
     user_preferences        = aws_lambda_function.user_preferences
     get_todays_word         = aws_lambda_function.get_todays_word
     word_history            = aws_lambda_function.word_history
+    voice_practice          = aws_lambda_function.voice_practice
   }
 }
 

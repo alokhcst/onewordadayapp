@@ -15,7 +15,8 @@ const functions = [
   'feedback-processor',
   'user-preferences',
   'get-todays-word',
-  'word-history'
+  'word-history',
+  'voice-practice'
 ];
 
 // Create dist directory if it doesn't exist

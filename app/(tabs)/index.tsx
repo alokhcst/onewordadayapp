@@ -1,6 +1,8 @@
 // Import useToast hook to show success/error messages and confirmation dialogs
+import { VoicePracticePanel } from '@/components/VoicePracticePanel';
 import { useToast } from '@/contexts/ToastContext';
-import { getMembershipBadge } from '@/lib/points';
+import type { VoicePracticeResult } from '@/lib/voicePracticeTypes';
+import { getMembershipBadge, type MembershipLevel } from '@/lib/points';
 // Import API client to make HTTP requests to backend
 import { api } from '@/lib/api';
 // Import Ionicons for icon components (volume, chat, arrow icons)
@@ -231,6 +233,22 @@ export default function TodayScreen() {
             </View>
           </View>
         )}
+
+        <VoicePracticePanel
+          wordId={word.wordId}
+          date={word.date}
+          targetWord={word.word}
+          onSuccess={(r: VoicePracticeResult) => {
+            if (r.reward?.levelChanged && r.reward.newLevel) {
+              const badge = getMembershipBadge(r.reward.newLevel as MembershipLevel);
+              showSuccess(`You're now a ${badge.label}!`);
+            } else if (r.pointsAwarded > 0) {
+              showSuccess(`Nice! +${r.pointsAwarded} points`);
+            } else if (r.practicedMarked) {
+              showSuccess('Marked as practiced');
+            }
+          }}
+        />
       </View>
 
       <View style={styles.buttonContainer}>

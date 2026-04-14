@@ -12,7 +12,8 @@
       "bundleIdentifier": "com.onewordadayapp",
       "supportsTablet": true,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "Allow the microphone so you can practice saying your daily word out loud."
       }
     },
     "android": {

@@ -234,6 +234,41 @@ export const api = {
   /**
    * Submit feedback
    */
+  /**
+   * Voice practice: send base64 audio (native). Server runs Whisper + GPT evaluation.
+   */
+  submitVoicePractice: async (payload: {
+    wordId: string;
+    date: string;
+    audioBase64: string;
+    mimeType?: string;
+  }) => {
+    console.log('========================================');
+    console.log('API - POST VOICE PRACTICE');
+    console.log('========================================');
+
+    try {
+      const client = await createApiClient();
+      const response = await client.post('/voice-practice', payload, {
+        timeout: 120000,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('  - Status:', response.status);
+      console.log('========================================\n');
+
+      return response.data;
+    } catch (error: any) {
+      console.log('  - ERROR in submitVoicePractice:');
+      console.log('    * Status:', error.response?.status);
+      console.log('    * Message:', error.response?.data?.message || error.message);
+      console.log('========================================\n');
+      throw error;
+    }
+  },
+
   submitFeedback: async (feedbackData: {
     wordId: string;
     date: string;
