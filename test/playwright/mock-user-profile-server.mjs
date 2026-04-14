@@ -64,7 +64,7 @@ function sendJson(res, status, body) {
   res.writeHead(status, {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, PUT, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   });
   res.end(data);
@@ -91,7 +91,7 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, PUT, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, PUT, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     });
     res.end();
@@ -141,6 +141,38 @@ const server = http.createServer(async (req, res) => {
         };
       }
       sendJson(res, 200, { message: 'updated', profile });
+    } catch {
+      sendJson(res, 400, { message: 'Bad JSON' });
+    }
+    return;
+  }
+
+  // Voice practice (Whisper STT) mock: used by Playwright API regression tests.
+  if (req.method === 'POST' && url === '/voice-practice') {
+    const auth = req.headers.authorization || '';
+    if (!auth.startsWith('Bearer ')) {
+      sendJson(res, 401, { message: 'Unauthorized' });
+      return;
+    }
+    try {
+      const body = await readBody(req);
+      if (!body.wordId || !body.date || !body.audioBase64) {
+        sendJson(res, 400, { message: 'Missing required fields: wordId, date, audioBase64' });
+        return;
+      }
+      sendJson(res, 200, {
+        transcript: 'serendipity',
+        targetWord: 'serendipity',
+        normalizedMatch: true,
+        mistakes: [],
+        suggestions: ['Keep a steady pace and emphasize “-dip-”'],
+        review: { whatWentWell: ['Clear pronunciation'], toImprove: [] },
+        followUpQuestions: ['Use the word “serendipity” in a sentence.'],
+        attemptsRemaining: 9,
+        scoreCorrect: true,
+        pointsAwarded: 1000,
+        practicedMarked: true,
+      });
     } catch {
       sendJson(res, 400, { message: 'Bad JSON' });
     }
