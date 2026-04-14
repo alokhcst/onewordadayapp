@@ -8,7 +8,7 @@ on:
 # Shared client config (Cognito + API) — add under repo Settings → Secrets and variables → Actions:
 #   EXPO_PUBLIC_USER_POOL_ID, EXPO_PUBLIC_USER_POOL_CLIENT_ID,
 #   EXPO_PUBLIC_OAUTH_DOMAIN, EXPO_PUBLIC_API_ENDPOINT
-# Android: build-android also pushes these to EAS "preview" before eas build so cloud builds match GitHub.
+# Mobile builds: the job pushes these to the EAS "preview" environment so cloud builds match GitHub.
 
 jobs:
   build-web:
@@ -79,7 +79,44 @@ jobs:
               --metadata-directive REPLACE
           fi
 
-  build-android:
+  # build-android:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  #     EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+  #     EXPO_PUBLIC_USER_POOL_ID: ${{ secrets.EXPO_PUBLIC_USER_POOL_ID }}
+  #     EXPO_PUBLIC_USER_POOL_CLIENT_ID: ${{ secrets.EXPO_PUBLIC_USER_POOL_CLIENT_ID }}
+  #     EXPO_PUBLIC_OAUTH_DOMAIN: ${{ secrets.EXPO_PUBLIC_OAUTH_DOMAIN }}
+  #     EXPO_PUBLIC_API_ENDPOINT: ${{ secrets.EXPO_PUBLIC_API_ENDPOINT }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 20
+  #         cache: npm
+  #     - run: npm ci
+  #     - name: Push EXPO_PUBLIC_* from GitHub secrets to EAS (preview)
+  #       run: |
+  #         set -euo pipefail
+  #         for var in EXPO_PUBLIC_USER_POOL_ID EXPO_PUBLIC_USER_POOL_CLIENT_ID EXPO_PUBLIC_OAUTH_DOMAIN EXPO_PUBLIC_API_ENDPOINT; do
+  #           if [ -z "${!var:-}" ]; then
+  #             echo "::error::Repository secret $var is empty. Add it under Settings → Secrets and variables → Actions."
+  #             exit 1
+  #           fi
+  #         done
+  #         for var in EXPO_PUBLIC_USER_POOL_ID EXPO_PUBLIC_USER_POOL_CLIENT_ID EXPO_PUBLIC_OAUTH_DOMAIN EXPO_PUBLIC_API_ENDPOINT; do
+  #           npx eas-cli@latest env:create \
+  #             --name "$var" \
+  #             --value "${!var}" \
+  #             --environment preview \
+  #             --visibility plaintext \
+  #             --non-interactive \
+  #             --force
+  #           echo "Synced $var to EAS preview environment."
+  #         done
+  #     - run: npx eas-cli@latest build --platform android --non-interactive --profile preview
+
+  build-ios:
     runs-on: ubuntu-latest
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -114,19 +151,5 @@ jobs:
               --force
             echo "Synced $var to EAS preview environment."
           done
-      - run: npx eas-cli@latest build --platform android --non-interactive --profile preview
-
-  # build-ios:
-  #   runs-on: macos-latest
-  #   env:
-  #     EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-  #     EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 20
-  #         cache: npm
-  #     - run: npm ci
-  #     - run: npx eas-cli@latest build --platform ios --non-interactive
+      - run: npx eas-cli@latest build --platform ios --non-interactive --profile preview
 
