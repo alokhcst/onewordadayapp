@@ -118,6 +118,7 @@ jobs:
 
   build-ios:
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
@@ -152,4 +153,10 @@ jobs:
             echo "Synced $var to EAS preview environment."
           done
       - run: npx eas-cli@latest build --platform ios --non-interactive --profile preview
+      - name: Note on iOS credentials
+        if: ${{ failure() }}
+        run: |
+          echo "::warning::EAS iOS build requires iOS distribution credentials for internal distribution."
+          echo "::warning::Run once locally in interactive mode: npx eas-cli@latest build --platform ios --profile preview"
+          echo "::warning::Then rerun this workflow."
 
